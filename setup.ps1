@@ -1,0 +1,88 @@
+#requires -Version 5.1
+<#
+.SYNOPSIS
+  Provision the prerequisites claude-harness uses, automatically and idempotently.
+.DESCRIPTION
+  Installs (only what is missing) the tools the harness's media/local-LLM pipeline
+  needs, then pulls the local model. Safe to re-run: every step is skipped when
+  already present. Run this once per machine after cloning; then run install.ps1.
+
+  Installs via winget: Node.js, uv, ffmpeg, yt-dlp, Ollama.
+  Pulls the Ollama model (default aya-expanse:8b, ~5 GB, strong Arabic) for free local analysis.
+
+  Nothing here is required for the rules/hooks/agents themselves - those work from
+  install.ps1 alone. This only enables `media-ingest` (video/audio + local LLM).
+.PARAMETER Model
+  Ollama model to pull. Default: aya-expanse:8b (strong Arabic).
+.PARAMETER SkipModel
+  Provision tools but do not pull the (large) model.
+.EXAMPLE
+  .\setup.ps1
+  .\setup.ps1 -SkipModel
+  .\setup.ps1 -Model qwen2.5:3b
+#>
+[CmdletBinding()]
+param([string]$Model = 'aya-expanse:8b', [switch]$SkipModel)
+$ErrorActionPreference = 'Stop'
+
+function Say([string]$m, [string]$c = 'Gray') { Write-Host $m -ForegroundColor $c }
+function Have([string]$cmd) { $null -ne (Get-Command $cmd -ErrorAction SilentlyContinue) }
+
+Say "claude-harness setup - provisioning prerequisites" 'Cyan'
+
+if (-not (Have 'winget')) {
+  Say "winget not found. Install 'App Installer' from the Microsoft Store, then re-run." 'Red'
+  exit 1
+}
+
+function OllamaPresent { (Have 'ollama') -or (Test-Path (Join-Path $env:LOCALAPPDATA 'Programs\Ollama\ollama.exe')) }
+
+# id => probe that proves it is installed
+$pkgs = [ordered]@{
+  'OpenJS.NodeJS'    = { Have 'node' }
+  'astral-sh.uv'     = { Have 'uv' }
+  'Gyan.FFmpeg'      = { Have 'ffmpeg' }
+  'yt-dlp.yt-dlp'    = { Have 'yt-dlp' }
+  'Ollama.Ollama'    = { OllamaPresent }
+}
+# winget "already installed / no applicable upgrade" is success, not a failure.
+$OK_CODES = @(0, -1978335189, -1978335212)
+foreach ($id in $pkgs.Keys) {
+  if (& $pkgs[$id]) { Say "  ok: $id already present" 'DarkGreen'; continue }
+  Say "  installing $id ..." 'Yellow'
+  winget install --id $id -e --silent --accept-package-agreements --accept-source-agreements
+  if ($OK_CODES -notcontains $LASTEXITCODE) { Say "  WARN: $id install returned $LASTEXITCODE (may need a new shell / elevation)" 'Yellow' }
+}
+
+# Ollama binary may not be on PATH in this shell right after install.
+$ollama = 'ollama'
+if (-not (Have 'ollama')) {
+  $local = Join-Path $env:LOCALAPPDATA 'Programs\Ollama\ollama.exe'
+  if (Test-Path $local) { $ollama = $local }
+}
+
+# Ensure the Ollama server is up, then pull the model.
+if (-not $SkipModel) {
+  Say "`nEnsuring Ollama server + model '$Model'" 'Cyan'
+  $up = $false
+  try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 3 http://localhost:11434/api/version | Out-Null; $up = $true } catch { $up = $false }
+  if (-not $up) {
+    Say "  starting Ollama server ..." 'Yellow'
+    Start-Process -FilePath $ollama -ArgumentList 'serve' -WindowStyle Hidden
+    for ($i = 0; $i -lt 20 -and -not $up; $i++) {
+      Start-Sleep 1
+      try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 3 http://localhost:11434/api/version | Out-Null; $up = $true } catch {}
+    }
+  }
+  if ($up) {
+    Say "  pulling $Model (first time is a few GB; skipped if present) ..." 'Yellow'
+    & $ollama pull $Model
+  } else {
+    Say "  WARN: Ollama server did not start; run 'ollama pull ' + $Model manually later" 'Yellow'
+  }
+} else {
+  Say "`n-SkipModel: not pulling the model. Run 'ollama pull $Model' when ready." 'DarkGray'
+}
+
+Say "`nSetup done. Now run: .\install.ps1" 'Green'
+Say "faster-whisper resolves on first transcription via uv (no separate install)." 'DarkGray'

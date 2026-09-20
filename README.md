@@ -127,6 +127,55 @@ single source of truth; `~/.claude/` is generated from it and never hand-edited.
 
 ---
 
+## The path a task takes through it
+
+The architecture above shows the *pieces*. This shows the *flow* — what happens,
+in order, from the moment you give the agent a task to a committed change. The
+harness intercepts at each step: rules shape it, hooks guard it, local runners
+keep it cheap.
+
+```mermaid
+flowchart TD
+  START([You give the agent a task]) --> RESTATE
+
+  RESTATE["Restate as small, numbered steps<br/><i>rule: workflow</i>"] --> REUSE
+  REUSE["Search &amp; reuse first<br/>libraries, prior art, existing code"] --> UNDERSTAND
+  UNDERSTAND{"Ambiguous?<br/><i>rule: understand</i>"}
+  UNDERSTAND -->|yes| ASK["Ask one sharp question"] --> PLAN
+  UNDERSTAND -->|no| PLAN
+
+  PLAN["Plan / choose role lens<br/>BA · Architect · Dev · QA"] --> IMPACT
+  IMPACT["Impact map<br/>grep the rule's essence, not its name"] --> TEST
+  TEST["Write a failing test first<br/><i>unit + integration</i>"] --> IMPL
+  IMPL["Implement the smallest change"] --> FALSIFY
+  FALSIFY{"Falsify:<br/>disable fix — does the guard fail alone?"}
+  FALSIFY -->|guard is dead| TEST
+  FALSIFY -->|guard is live| GATES
+
+  GATES["Focused gates<br/><i>local runners → fixed-size summary</i>"] --> GREEN
+  GREEN{"All green?"}
+  GREEN -->|no| IMPL
+  GREEN -->|yes| REVIEW
+
+  REVIEW["Review pass<br/>reviewer agents · security when triggered"] --> DOCS
+  DOCS["Update docs + a numbered manual-test scenario"] --> CONSENT
+  CONSENT{"Owner authorized commit?<br/><i>hook: commit-consent</i>"}
+  CONSENT -->|no| WAIT([Leave tree uncommitted, report status])
+  CONSENT -->|yes| COMMIT["Commit as the owner, English, no AI trace<br/><i>hook: author guard</i>"]
+  COMMIT --> LESSON["One-line lesson → growth log"]
+  LESSON --> DONE([Done: tested, falsified, reviewed, documented])
+
+  DESTRUCT[["hooks watch throughout:<br/>block destructive ops, bad authorship,<br/>build/history traps"]]
+  DESTRUCT -.guards.-> IMPL
+  DESTRUCT -.guards.-> COMMIT
+```
+
+Weekly, the growth log feeds the **improvement loop**: recurring lessons are
+distilled and — with your approval — promoted into a rule, so the path itself gets
+smarter over time.
+
+---
+
 ## Design principles
 
 - **One source of truth.** Edit the repo, run the installer; never hand-edit the

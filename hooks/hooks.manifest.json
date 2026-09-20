@@ -1,0 +1,21 @@
+{
+  "$comment": "Maps each harness hook to its Claude Code event + matcher. install.ps1 copies the files to ~/.claude/hooks/harness/ and merge-hooks.js registers them in settings.json. gateguard ships registered but disabled via env (owner decision).",
+  "envDefaults": {
+    "HARNESS_DISABLED_HOOKS": "gateguard"
+  },
+  "hooks": [
+    { "event": "PreToolUse",  "matcher": "Bash|PowerShell",            "file": "git-author.js" },
+    { "event": "PreToolUse",  "matcher": "Bash|PowerShell",            "file": "git-commit-consent.js" },
+    { "event": "PreToolUse",  "matcher": "Bash|PowerShell",            "file": "ef-no-build.js" },
+    { "event": "PreToolUse",  "matcher": "Bash|PowerShell",            "file": "ef-history-delete.js" },
+    { "event": "PreToolUse",  "matcher": "Bash|PowerShell",            "file": "destructive-ops.js" },
+    { "event": "PreToolUse",  "matcher": "Bash|PowerShell",            "file": "git-push-review.js" },
+    { "event": "PreToolUse",  "matcher": "Bash|PowerShell",            "file": "full-suite-dirty.js" },
+    { "event": "PreToolUse",  "matcher": "Bash|PowerShell",            "file": "dev-server-fresh.js" },
+    { "event": "PreToolUse",  "matcher": "Edit|Write|MultiEdit",       "file": "gateguard.js" },
+    { "event": "PreToolUse",  "matcher": "Edit|Write|MultiEdit|NotebookEdit", "file": "strategic-compact.js" },
+    { "event": "PostToolUse", "matcher": "Edit|Write|MultiEdit",       "file": "json-bom.js" },
+    { "event": "Stop",        "matcher": ".*",                          "file": "delivery-gate.js" },
+    { "event": "SessionStart","matcher": ".*",                          "file": "session-start.js" }
+  ]
+}
