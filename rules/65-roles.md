@@ -11,12 +11,12 @@ only when the work is genuinely independent (expensive — see below).
 |---|---|
 | **BA** (business analyst) | Who is this for, what do they actually need, what are the acceptance criteria? Turns a vague ask into testable requirements. Pairs with `intent-driven` thinking. |
 | **PM / product** | Is this worth building, and now? Priority, scope, the anti-goal, the metric of success. Pairs with `product-lens`. |
-| **Architect** | How do the pieces fit? Boundaries, interfaces, data flow, the trade-off and why. Deep modules; the design before the code. Agent: `planner`/`code-architect`. |
+| **Architect** | How do the pieces fit? Boundaries, interfaces, data flow, the trade-off and why. Deep modules; the design before the code. Agent: `planner`/`code-architect`. External tools: **diagram-design** (architecture/flow/sequence/state diagrams), **Understand-Anything** (codebase → knowledge graph, architecture tours, diff-impact). |
 | **Developer** | The smallest correct change, test-first, following the stack rules. |
 | **QA** | How does this break? Edge cases, the four UI states, the falsification, what the tests do *not* cover. Agents: `pr-test-analyzer`, `silent-failure-hunter`. |
 | **Researcher** | What does the outside evidence say? Sourced, dated, decision-first. Skill: `research-protocol`. |
 | **Security** | What's the attack surface? OWASP + the owned-asset fence. Skill/agent: `security-reviewer`, `security-lab`. |
-| **Reviewer** | Would this pass at a top shop? Severity-ranked findings. `/code-review` + the stack reviewers. |
+| **Reviewer** | Would this pass at a top shop? Severity-ranked findings. `/code-review` + the stack reviewers; **impeccable** for the UI layer. |
 
 Announce the hat when you switch: "بقبعة QA: …" so the owner sees which lens is speaking.
 

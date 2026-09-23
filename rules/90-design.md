@@ -5,6 +5,12 @@ For any design task, use the design skills: `ui-ux-pro-max` (pick the style),
 better` (polish), `design-system` (consistency), `web-design-guidelines` +
 `design-audit` (review). See also `95-ui.md`.
 
+**Companion tools (external — install via the README's "Companion plugins &
+skills").** For reviewing built pages and interfaces, use **impeccable**
+(`/impeccable typeset\|distill\|polish`, `npx impeccable detect` — 61 deterministic
+UI checks + live browser iteration); to push generated UI past generic defaults,
+use **taste-skill**. Both complement `ui-ux-pro-max`, they do not replace it.
+
 ## Design tokens — one source | مصدر واحد
 
 Each project has a single set of design tokens: semantic colors, typography,
