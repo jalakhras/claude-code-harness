@@ -1,3 +1,7 @@
 node_modules/
 .claude/
 *.log
+
+# API keys / secrets (never committed)
+.gemini_key
+**/.gemini_key

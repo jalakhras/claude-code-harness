@@ -49,6 +49,10 @@ stakes, not by cost.
 - **Offload only low-stakes, verifiable work** to local models or cheaper agents:
   drafts, scaffolds, first-pass analysis, bulk summarization — the same media /
   `local-tests` pattern. Their output is reviewed, never trusted.
+- **Which offload target:** sensitive, bulk, or first-pass → the **local Ollama**
+  path (private, free, zero cloud); a strong second opinion on *non-sensitive*
+  work, or continuing when the Claude budget is low → the **`consult`** skill
+  (Gemini; free flash by default, paid Pro only on explicit opt-in).
 - **Parallelism buys wall-clock — not accuracy, and not tokens.** Orca isolates
   each agent in its own git worktree with a review queue; use it only for
   **genuinely independent** work (unrelated modules, fan-out reviews) per
