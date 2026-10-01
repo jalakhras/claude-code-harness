@@ -53,6 +53,13 @@ stakes, not by cost.
   path (private, free, zero cloud); a strong second opinion on *non-sensitive*
   work, or continuing when the Claude budget is low → the **`consult`** skill
   (Gemini; free flash by default, paid Pro only on explicit opt-in).
+- **Multi-step agentic sub-task, offloaded:** run **Pi** (`pi -p`, the `pi.dev`
+  agent CLI) on a **local Ollama model** (free, private) for a low-stakes or
+  budget-constrained task — a full read/write/edit/bash loop a one-shot call
+  cannot do; **Orca** can orchestrate several Pi workers in isolated worktrees.
+  Scope what Pi may touch (a worktree, a bounded task) and review its writes: a
+  weak local model with exec/write power is guarded, not trusted — and only ever
+  saves tokens when pointed at a non-Claude model.
 - **Parallelism buys wall-clock — not accuracy, and not tokens.** Orca isolates
   each agent in its own git worktree with a review queue; use it only for
   **genuinely independent** work (unrelated modules, fan-out reviews) per
