@@ -113,7 +113,7 @@ graph TD
 | **Stacks** (`rules/stacks/*`) | Per-language conventions and traps, imported only inside a project that uses that stack — so context stays lean. |
 | **Hooks** (`hooks/*`) | Event guards. Blocking hooks stop the mistakes that cost time (bad commits, destructive commands); warning hooks nudge. Each is tested to prove it actually blocks. |
 | **Agents** (`agents/*`) | Review and planning specialists invoked by name. |
-| **Skills** (`skills/*`) | On-demand workflows: local test runners, media/knowledge ingestion, research, a multi-role review pass, onboarding a new stack, a weekly improvement review, a model-consult second-opinion tool, and more. |
+| **Skills** (`skills/*`) | On-demand workflows: local test runners, media/knowledge ingestion, research, a multi-role review pass, onboarding a new stack, a weekly improvement review, a model-consult second-opinion tool, an optional local text-to-speech skill, and more. |
 | **Projects** (`projects/*`) | Per-repository rules, installed into each repo's own (git-ignored) config so a project's specifics travel with it. |
 | **Scripts** | `setup.ps1` (prerequisites), `install.ps1` (generate + copy, idempotent, backs up), `install-projects.ps1`, `doctor.ps1` (drift check), `test-hooks.ps1` (prove hooks block), an audit (is it in force?). |
 

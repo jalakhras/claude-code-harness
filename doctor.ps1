@@ -84,9 +84,12 @@ if (Test-Path $agentsSrc) {
 $skillsSrc = Join-Path $RepoRoot 'skills'
 if (Test-Path $skillsSrc) {
   Get-ChildItem $skillsSrc -Directory | ForEach-Object {
+    $srcMd = Join-Path $_.FullName 'SKILL.md'
+    $optional = (Test-Path $srcMd) -and ((Read-Utf8 $srcMd) -match '(?m)^\s*optional:\s*true\s*$')
     $dst = Join-Path $ClaudeRoot "skills\$($_.Name)\SKILL.md"
-    if (-not (Test-Path $dst)) { Say "  MISSING: skill $($_.Name)" 'Red'; $script:issues++ }
-    else { Say "  OK:      skill $($_.Name)" 'DarkGreen' }
+    if (Test-Path $dst) { Say "  OK:      skill $($_.Name)$(if ($optional) {' (optional, on)'} else {''})" 'DarkGreen' }
+    elseif ($optional) { Say "  OPTIONAL: skill $($_.Name) off (enable: install.ps1 -Skills $($_.Name))" 'DarkGray' }
+    else { Say "  MISSING: skill $($_.Name)" 'Red'; $script:issues++ }
   }
 }
 

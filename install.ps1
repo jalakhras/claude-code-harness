@@ -18,16 +18,25 @@
   Commit author email. Default: you@example.com.
 .PARAMETER DryRun
   Print planned actions without writing anything.
+.PARAMETER WithOptional
+  Also install skills marked `optional: true` in their SKILL.md frontmatter.
+  By default optional skills are skipped, and a previously installed one is
+  removed (so re-running without the flag toggles it off).
+.PARAMETER Skills
+  Names of specific optional skills to install, e.g. -Skills narrate.
 .EXAMPLE
   .\install.ps1
   .\install.ps1 -DryRun
+  .\install.ps1 -Skills narrate
   .\install.ps1 -Author "Jane Doe" -Email "jane@example.com"
 #>
 [CmdletBinding()]
 param(
   [string]$Author = 'jalakhras',
   [string]$Email  = 'you@example.com',
-  [switch]$DryRun
+  [switch]$DryRun,
+  [switch]$WithOptional,
+  [string[]]$Skills = @()
 )
 
 $ErrorActionPreference = 'Stop'
@@ -170,6 +179,29 @@ if (Test-Path $Manifest) {
 if (Test-Path $SkillsSrc) {
   Get-ChildItem $SkillsSrc -Directory | ForEach-Object {
     $skillName = $_.Name
+    # optional skills (SKILL.md frontmatter 'optional: true') are opt-in: skipped
+    # by default, installed only with -WithOptional or -Skills <name>. A previously
+    # installed optional skill is removed when not selected, so re-running toggles
+    # it off (the enable/disable the owner asked for).
+    $srcSkillMd = Join-Path $_.FullName 'SKILL.md'
+    $isOptional = (Test-Path $srcSkillMd) -and ((Read-Utf8 $srcSkillMd) -match '(?m)^\s*optional:\s*true\s*$')
+    $selected = $WithOptional -or ($Skills -contains $skillName)
+    if ($isOptional -and -not $selected) {
+      $optDst = Join-Path $SkillsDst $skillName
+      if (Test-Path $optDst) {
+        $wasMine = $false
+        foreach ($p in $prevManaged) { if ($p -like (Join-Path $optDst '*')) { $wasMine = $true; break } }
+        $optMd = Join-Path $optDst 'SKILL.md'
+        if (-not $wasMine -and (Test-Path $optMd) -and ((Read-Utf8 $optMd) -match 'origin:\s*claude-harness')) { $wasMine = $true }
+        if ($wasMine) {
+          if ($DryRun) { Say "  optional (would disable): $skillName" 'DarkYellow' }
+          else { Remove-Item $optDst -Recurse -Force; Say "  optional (disabled, removed): $skillName" 'Yellow' }
+        } else { Say "  optional (skipped, foreign present): $skillName" 'DarkGray' }
+      } else {
+        Say "  optional (skipped): $skillName  [enable: -Skills $skillName]" 'DarkGray'
+      }
+      return
+    }
     # foreign-collision guard: skip a pre-existing skill we do not manage.
     # Compare parsed manifest paths (JSON), not regex on escaped backslashes.
     $dstDir = Join-Path $SkillsDst $skillName
