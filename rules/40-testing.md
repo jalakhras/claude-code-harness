@@ -17,7 +17,7 @@ plus everything that imports the touched shared pieces (grep the importers) — 
 save tokens, time, and effort. **Full suite** is reserved for changes to a shared
 foundation (shell, pager, stubs, localization) or before a release/tag.
 
-## Browser suites run locally; Claude supervises | المتصفّح محلّيّاً وكلود مراقب
+## Suites run locally; Claude supervises | الحِزم محلّيّاً وكلود مراقب
 
 Playwright (and any long browser/UI suite) is **run through the local runner**,
 not read raw («اطلب من المديول المحليه القيام بها لتوفير التوكن وانت تكون
@@ -30,12 +30,15 @@ python ~/.claude/skills/local-tests/scripts/pw-run.py <playwright args…>
 It runs the suite with a JSON reporter, re-runs the failures once (so a flake is
 named a flake, not a defect), and prints a **fixed-size summary** (counts, and per
 failure: test, line, expected/received, first error line), with a short local-LLM
-triage (Ollama) when it is up. **.NET suites go through `dotnet-run.py`** the same
-way (TRX logger → counts + per-failure name/first-error only). Claude reads the
-summary, decides, and opens a screenshot/trace/`.trx` only for a failure it is
-actually fixing. Never pipe a full Playwright/dotnet report, a screenshot per
-failure, or a `--debug` session into the context. Both runners are zero-config
-(`--cwd` defaults to `.`). Writing and fixing tests stays Claude's job.
+triage (Ollama) when it is up. **pytest suites go through `pytest-run.py`** and **.NET suites through `dotnet-run.py`** the same
+way (JUnit XML / TRX logger → counts + per-failure name and first error line
+only). Claude reads the summary, decides, and opens a screenshot, a trace, a
+`.trx` or one test's own output **only** for a failure it is actually fixing.
+Never pipe a full report, a screenshot per failure, or a `--debug` session into
+the context. **This holds for a focused module as much as for a full suite** — a
+pytest run of one file still carries every assertion diff it produces. The three
+runners are zero-config (`--cwd` defaults to `.`). Writing tests, falsifying them
+and fixing the code stay Claude's job; the local model edits nothing.
 
 ## Falsify every new test | تكذيب كل اختبار
 

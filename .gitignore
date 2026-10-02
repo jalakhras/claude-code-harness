@@ -5,3 +5,7 @@ node_modules/
 # API keys / secrets (never committed)
 .gemini_key
 **/.gemini_key
+
+# Python build artifacts
+__pycache__/
+*.pyc

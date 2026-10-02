@@ -58,6 +58,20 @@ failure being fixed). Zero-config: from a solution/project dir it just works; a
 `--filter` scopes it for focused testing. `dotnet test` output and stack traces
 never enter the context.
 
+## pytest suites — same idea
+
+A Python repo's test suite goes through `pytest-run.py` the same way:
+
+```
+python ~/.claude/skills/local-tests/scripts/pytest-run.py --cwd <dir> [<pytest args…>]
+python ~/.claude/skills/local-tests/scripts/pytest-run.py --cwd path/to/project -k "unit or integration"
+```
+It runs pytest with a JUnit XML report, re-runs the failures **once by node id**
+(a test that passes the second time is **flaky**, not a defect), and prints only
+counts + per failure the node id and the first assertion line, with an optional
+Ollama triage. A focused run of one file still carries every assertion diff, so
+the summary matters even there; `--no-llm` skips the triage.
+
 ## Requirements
 
 Python 3.10+; for Playwright the project's `npx playwright`; for .NET the SDK on
