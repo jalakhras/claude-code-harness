@@ -81,36 +81,37 @@ single source of truth; `~/.claude/` is generated from it and never hand-edited.
 ## Architecture
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontFamily':'system-ui, -apple-system, sans-serif', 'lineColor':'#94a3b8'}}}%%
 graph TD
-  subgraph SOT["Source of truth (git repo)"]
+  subgraph SOT["Source of truth · git repo"]
     RULES["rules/ — always-loaded standards"]
     STACKS["rules/stacks/ — per-language, path-scoped"]
     HOOKS["hooks/ — event guards"]
-    AGENTS["agents/ — review & planning specialists"]
+    AGENTS["agents/ — review &amp; planning specialists"]
     SKILLS["skills/ — on-demand workflows"]
     PROJECTS["projects/ — per-repo rules"]
-    INSTALL["install.ps1 / setup.ps1 / doctor.ps1"]
+    INSTALL["install.ps1 · setup.ps1 · doctor.ps1"]
   end
 
-  subgraph CC["~/.claude (what Claude Code reads)"]
+  subgraph CC["~/.claude · what Claude Code reads"]
     CLAUDEMD["CLAUDE.md — @imports the rules"]
     RH["rules/harness/*"]
-    HH["hooks/harness/*  (settings.json)"]
+    HH["hooks/harness/* · settings.json"]
     AH["agents/*"]
     SH["skills/*"]
   end
 
   subgraph RUNTIME["Every session"]
-    LENS["Role lenses: BA · PM · Architect · Dev · QA · Security"]
-    WF["Workflow: search - understand - plan - test - implement - falsify - review - commit"]
-    GUARD["Hooks block killer mistakes; warn on the rest"]
-    LOCAL["Local runners: tests, transcription, analysis (free, off the token bill)"]
+    LENS["Role lenses · BA · PM · Architect · Dev · QA · Security"]
+    WF["Workflow · search → understand → plan → test → falsify → review → commit"]
+    GUARD["Hooks block killer mistakes, warn on the rest"]
+    LOCAL["Local runners · tests · transcription · analysis · off the token bill"]
   end
 
   subgraph LEARN["Improvement loop"]
-    LOG["growth log (one line per session)"]
-    REVIEW["weekly review — distil recurring lessons"]
-    AUDIT["audit — is it actually in force?"]
+    LOG["growth log · one line per session"]
+    REVIEW["weekly review · distil recurring lessons"]
+    AUDIT["audit · is it actually in force?"]
   end
 
   INSTALL -->|generates & copies| CLAUDEMD
@@ -131,6 +132,15 @@ graph TD
   LOG --> REVIEW
   REVIEW -->|approved promotions| RULES
   AUDIT -.checks.-> CC
+
+  classDef sot fill:#eef2ff,stroke:#6366f1,color:#312e81;
+  classDef cc fill:#ecfeff,stroke:#06b6d4,color:#0e7490;
+  classDef rt fill:#f0fdf4,stroke:#22c55e,color:#166534;
+  classDef ln fill:#fef9c3,stroke:#eab308,color:#854d0e;
+  class RULES,STACKS,HOOKS,AGENTS,SKILLS,PROJECTS,INSTALL sot;
+  class CLAUDEMD,RH,HH,AH,SH cc;
+  class LENS,WF,GUARD,LOCAL rt;
+  class LOG,REVIEW,AUDIT ln;
 ```
 
 ---
@@ -142,6 +152,7 @@ order, from the moment you give the agent a task to a committed change. The harn
 intercepts at each step: rules shape it, hooks guard it, local runners keep it cheap.
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'fontFamily':'system-ui, -apple-system, sans-serif', 'lineColor':'#94a3b8'}}}%%
 flowchart TD
   START([Task from you]) --> S0
 
@@ -177,6 +188,21 @@ flowchart TD
   GUARD -.watches.-> S4
   GUARD -.watches.-> S6
   GUARD -.watches.-> COMMIT
+
+  classDef entry fill:#e0e7ff,stroke:#6366f1,color:#312e81;
+  classDef step fill:#eff6ff,stroke:#3b82f6,color:#1e3a8a;
+  classDef decision fill:#fff7ed,stroke:#f97316,color:#7c2d12;
+  classDef sig fill:#fae8ff,stroke:#a21caf,color:#701a75;
+  classDef done fill:#dcfce7,stroke:#22c55e,color:#166534;
+  classDef wait fill:#f1f5f9,stroke:#94a3b8,color:#334155;
+  classDef guard fill:#fef2f2,stroke:#ef4444,color:#991b1b;
+  class START entry;
+  class S0,S1,RESTATE,ASK,S2,S3,S4,S6,REVIEW,S7,COMMIT,MIGRATE,LESSON step;
+  class AMB,GREEN,CONSENT decision;
+  class S5 sig;
+  class WAIT wait;
+  class DONE done;
+  class GUARD guard;
 ```
 
 Weekly, the growth log feeds the **improvement loop**: recurring lessons are
