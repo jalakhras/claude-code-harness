@@ -79,7 +79,7 @@ model) on Groq's free tier, auto-falling back to local aya.
   terms as a prompt to bias decoding:
 
 ```bash
-uv run --with faster-whisper --python 3.12 python "$SKILL_DIR/scripts/transcribe.py" \
+uv run --with faster-whisper --with "av<19" --python 3.12 python "$SKILL_DIR/scripts/transcribe.py" \
   "<media>" --model large-v3 --lang ar \
   --prompt "<comma-separated domain terms that bias decoding, e.g. product or field jargon>" \
   --out "<dir>/transcript.md"

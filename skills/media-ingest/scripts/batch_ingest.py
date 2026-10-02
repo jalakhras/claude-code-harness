@@ -22,7 +22,18 @@ import urllib.request
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+from transcribe import WHISPER_UV_DEPS  # noqa: E402 - single source for the av<19 pin
 VIDEO_EXT = {".mp4", ".mkv", ".webm", ".mov", ".avi", ".m4a", ".mp3", ".wav"}
+
+
+def transcribe_cmd(video, transcript, *, model, lang, engine):
+    """uv command to transcribe one file. Built from WHISPER_UV_DEPS so the av<19
+    pin lives in exactly one place (transcribe.WHISPER_UV_DEPS)."""
+    withs = [x for dep in WHISPER_UV_DEPS for x in ("--with", dep)]
+    return ["uv", "run", *withs, "--python", "3.12", "python",
+            str(HERE / "transcribe.py"), str(video),
+            "--model", model, "--lang", lang, "--engine", engine, "--out", str(transcript)]
 
 
 def run(cmd):
@@ -96,11 +107,7 @@ def main() -> int:
             sys.stderr.write("  skip (transcript exists)\n"); skipped += 1; continue
 
         # 1. transcribe (local whisper via uv; GPU->CPU fallback inside the script)
-        rc = run([
-            "uv", "run", "--with", "faster-whisper", "--python", "3.12", "python",
-            str(HERE / "transcribe.py"), str(v),
-            "--model", args.model, "--lang", args.lang, "--engine", args.engine, "--out", str(transcript),
-        ])
+        rc = run(transcribe_cmd(v, transcript, model=args.model, lang=args.lang, engine=args.engine))
         if rc != 0 or not transcript.exists():
             sys.stderr.write("  transcribe FAILED\n"); failed += 1; continue
 

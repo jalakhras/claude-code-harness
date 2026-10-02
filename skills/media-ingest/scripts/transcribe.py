@@ -6,12 +6,26 @@ caller (SKILL.md) tries platform captions before invoking this. Arabic is the
 default language for trading videos. Output is timestamped Markdown.
 
 Run via uv so deps resolve without polluting base Python:
-  uv run --with faster-whisper --python 3.12 python transcribe.py <media> [--model large-v3] [--lang ar] [--out transcript.md]
+  uv run --with faster-whisper --with "av<19" --python 3.12 python transcribe.py <media> [--model large-v3] [--lang ar] [--out transcript.md]
 """
 import argparse
 import os
 import sys
 from pathlib import Path
+
+# faster-whisper deps for the uv invocation. Pin av<19: av 19.0.0 breaks
+# faster-whisper 1.2.1 (open() got an unexpected keyword 'metadata_errors'),
+# failing transcription on both CUDA and CPU.
+WHISPER_UV_DEPS = ["faster-whisper", "av<19"]
+
+# transcribe() options tuned on a 19:27 Arabic video (large-v3): they cut
+# hallucinated Latin words (11->0), repetition loops (3->0) and duplicate lines
+# (6->0). vad_parameters applies because vad_filter is True.
+TRANSCRIBE_OPTS = {
+    "vad_filter": True,
+    "condition_on_previous_text": False,
+    "vad_parameters": {"min_silence_duration_ms": 500},
+}
 
 
 def _cuda_dll_dirs():
@@ -139,7 +153,8 @@ def transcribe_on(model_name, device, compute, media, lang, prompt):
     the caller's try/except — that is the only place the real failure surfaces."""
     from faster_whisper import WhisperModel
     m = WhisperModel(model_name, device=device, compute_type=compute)
-    seg_iter, info = m.transcribe(str(media), language=lang, initial_prompt=prompt or None, vad_filter=True)
+    seg_iter, info = m.transcribe(str(media), language=lang,
+                                  initial_prompt=prompt or None, **TRANSCRIBE_OPTS)
     segments = list(seg_iter)  # force the work now so errors are catchable
     return segments, info, device, compute
 
