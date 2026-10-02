@@ -153,42 +153,61 @@ intercepts at each step: rules shape it, hooks guard it, local runners keep it c
 
 ```mermaid
 %%{init: {'theme':'base', 'themeVariables': {'fontFamily':'system-ui, -apple-system, sans-serif', 'lineColor':'#94a3b8'}}}%%
-flowchart TD
+flowchart TB
   START([Task from you]) --> S0
 
-  S0["<b>Step 0 · Search &amp; reuse</b><br/>libraries, prior art, existing code — before new code"] --> S1
-  S1["<b>Step 1 · Understand</b><br/>read code, docs, recent commits<br/>classify size: spike · bounded · architectural"] --> AMB
-  AMB{"Genuinely ambiguous?"}
-  AMB -->|yes| ASK["Ask one sharp question"] --> RESTATE
-  AMB -->|no| RESTATE
-  RESTATE["<b>Restate as small, uniform numbered steps</b><br/>shown before any action; progress tracked against them"] --> S2
+  subgraph P1["Phase 1 · Understand and plan"]
+    S0["<b>Step 0 · Search and reuse</b><br/>libraries · prior art · existing code"]
+    S1["<b>Step 1 · Understand</b><br/>classify size: spike · bounded · architectural"]
+    AMB{"Ambiguous?"}
+    ASK["Ask one sharp question"]
+    RESTATE["<b>Restate as small numbered steps</b><br/>shown before any action"]
+    S2["<b>Step 2 · Impact map</b><br/>grep the essence, not the name"]
+    S0 --> S1 --> AMB
+    AMB -->|yes| ASK --> RESTATE
+    AMB -->|no| RESTATE
+    RESTATE --> S2
+  end
 
-  S2["<b>Step 2 · Impact map</b><br/>grep the rule's essence, not its name;<br/>list who reads what you will change"] --> S3
-  S3["<b>Step 3 · Failing test first</b><br/>both layers — unit (the decision) +<br/>integration (every caller reads it)"] --> S4
-  S4["<b>Step 4 · Implement</b><br/>the smallest change that passes; no scope creep"] --> S5
-  S5{"<b>Step 5 · Falsify</b> (signature step)<br/>disable the fix — does the guard fail alone?"}
-  S5 -->|"dead / passes anyway"| S3
-  S5 -->|"guard is live"| S6
+  subgraph P2["Phase 2 · Build and prove"]
+    S3["<b>Step 3 · Failing test first</b><br/>unit + integration"]
+    S4["<b>Step 4 · Implement</b><br/>smallest change that passes"]
+    S5{"<b>Step 5 · Falsify</b><br/>disable fix — guard fails alone?"}
+    S3 --> S4 --> S5
+    S5 -->|guard dead| S3
+  end
 
-  S6["<b>Step 6 · Focused gates</b><br/>only the touched area + its importers,<br/>via local runners → fixed-size summary<br/>(perf claim? measure before &amp; after)"] --> GREEN
-  GREEN{"All green on settled code?"}
+  subgraph P3["Phase 3 · Gate and review"]
+    S6["<b>Step 6 · Focused gates</b><br/>local runners → summary · measure perf"]
+    GREEN{"All green?"}
+    REVIEW["<b>Review pass</b><br/>reviewers · security when triggered"]
+    S6 --> GREEN -->|yes| REVIEW
+  end
+
+  subgraph P4["Phase 4 · Ship"]
+    S7["<b>Step 7 · Document</b><br/>docs + numbered manual-test scenario"]
+    CONSENT{"Commit authorized?"}
+    COMMIT["<b>Commit</b> as owner · English · no AI trace"]
+    MIGRATE["Say if restart / migration needed"]
+    LESSON["Lesson → growth log"]
+    S7 --> CONSENT -->|yes| COMMIT --> MIGRATE --> LESSON
+  end
+
+  S2 --> S3
+  S5 -->|guard live| S6
   GREEN -->|no| S4
-  GREEN -->|yes| REVIEW
-  REVIEW["<b>Review pass</b><br/>reviewer agents; security-reviewer when it touches<br/>auth, input, DB, files, or crypto"] --> S7
+  REVIEW --> S7
+  CONSENT -->|no| WAIT(["Leave uncommitted ·<br/>report status"])
+  LESSON --> DONE(["<b>Done</b> · tested · falsified ·<br/>reviewed · documented · one commit"])
 
-  S7["<b>Step 7 · Document</b><br/>update docs + add a numbered manual-test scenario"] --> CONSENT
-  CONSENT{"Owner authorized this commit?<br/><i>hook: git-commit-consent</i>"}
-  CONSENT -->|no| WAIT(["Leave tree uncommitted · report status + file count"])
-  CONSENT -->|yes| COMMIT["<b>Commit</b> as the owner, English, explaining why<br/>no AI trace &nbsp;<i>hook: git-author</i>"]
-  COMMIT --> MIGRATE["Tell the owner: restart the API / run the migrator?"]
-  MIGRATE --> LESSON["One-line lesson → growth log"]
-  LESSON --> DONE(["<b>Done</b> — failing→passing test, falsified; unit + integration;<br/>gates green; docs + manual scenario; one commit. Not before."])
-
-  GUARD[["Hooks guard throughout:<br/>destructive-ops · bad authorship ·<br/>build / history traps · push review"]]
+  GUARD[["Hooks guard throughout ·<br/>destructive-ops · authorship ·<br/>build / history · push review"]]
   GUARD -.watches.-> S4
-  GUARD -.watches.-> S6
   GUARD -.watches.-> COMMIT
 
+  style P1 fill:#fafafa,stroke:#e5e7eb,color:#0f172a;
+  style P2 fill:#fafafa,stroke:#e5e7eb,color:#0f172a;
+  style P3 fill:#fafafa,stroke:#e5e7eb,color:#0f172a;
+  style P4 fill:#fafafa,stroke:#e5e7eb,color:#0f172a;
   classDef entry fill:#e0e7ff,stroke:#6366f1,color:#312e81;
   classDef step fill:#eff6ff,stroke:#3b82f6,color:#1e3a8a;
   classDef decision fill:#fff7ed,stroke:#f97316,color:#7c2d12;
