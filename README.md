@@ -60,7 +60,7 @@ takes the structure and keeps the footprint small.
 
 | Layer | What it does |
 |---|---|
-| **Rules** (`rules/*.md`) | Always-loaded standards — workflow, testing, review, style, git, security, performance, design, UI, memory, roles. Wired into `~/.claude/CLAUDE.md` via `@import` so they load every session. |
+| **Rules** (`rules/*.md`) | Always-loaded standards — guardrails (AI failure modes), workflow, testing, review, style, git, security, performance, design, UI, memory, roles. Wired into `~/.claude/CLAUDE.md` via `@import` so they load every session. |
 | **Stacks** (`rules/stacks/*`) | Per-language conventions and traps, imported only inside a project that uses that stack — so context stays lean. |
 | **Hooks** (`hooks/*`) | Event guards. Blocking hooks stop costly mistakes (bad commits, destructive commands); warning hooks nudge. Each is tested to prove it actually blocks. |
 | **Agents** (`agents/*`) | Review and planning specialists invoked by name. |
