@@ -31,6 +31,17 @@ backend, ui»).
 - Avoid the last ~20% of the context window for large refactors or multi-file work.
   Run `/context-budget` when context fills; drop rules/MCPs you do not need.
 
+## Local GPU — start on demand, free when done | حرّر الـGPU
+
+VRAM is scarce — a single consumer GPU can't hold two models at once. Treat local
+models (Ollama, faster-whisper) as **on demand**:
+- Start Ollama only when a step needs it; **when that step is done, stop/unload it**
+  to free the GPU (`ollama stop <model>`, or send the request with `keep_alive: 0`),
+  then start it again on the next need. Never leave a model resident between tasks.
+- **Never run two GPU models at once** (e.g. faster-whisper transcription and an
+  Ollama analysis) — they contend for VRAM; run them in sequence, freeing the GPU
+  between.
+
 ## Agent & model routing | توجيه الوكلاء والنماذج
 
 External agent runners (Orca `orca-cli`) and agentic IDEs (Google Antigravity,
