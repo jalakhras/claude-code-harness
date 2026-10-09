@@ -26,8 +26,13 @@ backend, ui»).
 
 ## Model & context | النموذج والسياق
 
-- Model by task: lighter models for frequent worker/agent calls, the strong coding
-  model for main work, the deepest model for architecture.
+- **Model by task** — automatic at the agent level: each `agents/*.md` pins its
+  `model`, so a delegated task runs on the right tier. Architecture/planning →
+  deepest (`planner` = opus); code, review and tests → strong (the `csharp` /
+  `typescript` / `database` / `security` reviewers, `tdd-guide`,
+  `build-error-resolver` = sonnet). Never downgrade a correctness-bearing agent to
+  save cost. The **main session model is yours to set** (`/model`); Claude Code
+  does not auto-switch it per turn, and a hook cannot set it.
 - Avoid the last ~20% of the context window for large refactors or multi-file work.
   Run `/context-budget` when context fills; drop rules/MCPs you do not need.
 

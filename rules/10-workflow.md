@@ -5,6 +5,12 @@ process; steps 0–1 and the size classification are additions. Do not shortcut 
 («لا تُختصر»). the ABP app's `docs/change-workflow.md` is a project-specific
 extension of this, not a competing copy.
 
+This workflow is **chain-of-thought made explicit, then acted on (ReAct)**: steps
+1–2 reason on paper (restate as numbered steps, impact map) before any action,
+and steps 3–6 are act→observe loops (write a failing test, implement, **falsify**,
+run focused gates and read the result). For a genuinely hard reasoning problem,
+reach for the `think` / `sequential-thinking` skills before coding.
+
 ## Step 0 — Search & reuse | البحث وإعادة الاستخدام *(before any new code)*
 
 - GitHub code/repo search, library docs, and package registries (npm/PyPI/NuGet/
