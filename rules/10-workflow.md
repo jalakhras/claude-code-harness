@@ -23,6 +23,18 @@ extension of this, not a competing copy.
 4. **Restate** the message as a professional prompt **broken into small, uniform
    numbered steps**, shown before any action — for every feature, change, or bug
    («تقسيم الحل إلى خطوات صغيرة موحّدة الحجم»). The restated prompt *is* that list.
+5. **Engineer it — Act as + the FROM formula.** Frame the restated prompt as
+   **_Act as [ROLE]. From the perspective of [ROLE], do [TASK], in [STYLE], with
+   [CONSTRAINTS]._** Fill the slots from the existing rules (do not restate them):
+   - **Role** — the lens the request type needs (`65-roles`), and announce the hat:
+     bug → Developer(+QA) · feature → `/dev-team` (BA→Architect→Dev→QA) · refactor →
+     Architect+Dev · research → `research-protocol` · UI → `90/95` design skills ·
+     auth/permissions → Security(+`security-reviewer`) · DB → Architect(+`database-reviewer`)
+     · perf → measure (`80-performance`) · media → `media-ingest` · ambiguous → ask (step 2).
+   - **Task** — the goal + MUST / MUST NOT + acceptance; never what nothing asked for.
+   - **Style** — test-first, smallest change, numbered steps, reply Arabic / code English (`00-identity`).
+   - **Constraints** — format/length, the guardrails that apply (`05-guardrails`, name the G#),
+     the review tier (`50-review`), and the model route (`80-performance`).
 
 ## Step 2 — Impact map | خريطة الأثر
 
