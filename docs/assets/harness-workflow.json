@@ -1,52 +1,47 @@
 {
-  "schema_version": 2,
-  "diagram_type": "workflow",
+  "schema_version": 1,
+  "diagram_type": "architecture",
   "meta": {
     "title": "The path a change takes",
     "output": "harness-workflow.html",
     "quality_profile": "showcase",
     "animation": "trace",
     "views": [
-      { "id": "happy", "label": "The happy path", "focus": ["search", "plan", "implement", "test", "review", "commit"], "note": "Search and plan, then build test-first and pass the gates before a guarded commit." },
-      { "id": "gates", "label": "Gates and proof", "focus": ["implement", "test", "review", "commit"], "note": "Falsify every test; heavy suites split onto the lab worker; review is tiered." },
-      { "id": "loop", "label": "When a gate is red", "focus": ["test", "fix", "implement", "review"], "note": "A failed falsification or a review finding loops straight back to the fix." }
+      { "id": "understand", "label": "Search → plan", "focus": ["search", "restate", "impact"], "note": "Reuse before new code; restate as numbered steps; map the impact." },
+      { "id": "build", "label": "Test-first + falsify", "focus": ["failtest", "implement", "falsify", "gates"], "note": "A failing test first, the smallest change, then falsify and pass the gates." },
+      { "id": "ship", "label": "Review → ship → remember", "focus": ["gates", "review", "commit", "remember"], "note": "Tiered review, a guarded commit, and what was learned is recorded." }
     ]
   },
-  "lanes": [
-    { "id": "flow", "label": "Change" },
-    { "id": "gates", "label": "Gates" },
-    { "id": "record", "label": "Record" },
-    { "id": "loopback", "label": "Loop back", "variant": "exception" }
+  "components": [
+    { "id": "search", "type": "external", "label": "0 · Search & reuse", "sublabel": "reuse before new code", "pos": [40, 160], "size": [190, 64] },
+    { "id": "restate", "type": "frontend", "label": "1 · Restate as steps", "sublabel": "Act as + FROM · roles", "pos": [258, 160], "size": [190, 64] },
+    { "id": "impact", "type": "frontend", "label": "2 · Impact map", "sublabel": "grep the essence", "pos": [476, 160], "size": [190, 64] },
+    { "id": "failtest", "type": "backend", "label": "3 · Failing test", "sublabel": "unit + integration", "pos": [694, 160], "size": [190, 64] },
+    { "id": "implement", "type": "backend", "label": "4 · Implement", "sublabel": "smallest change", "pos": [912, 160], "size": [190, 64] },
+    { "id": "falsify", "type": "security", "label": "5 · Falsify", "sublabel": "fail alone, restore", "pos": [912, 360], "size": [190, 64] },
+    { "id": "gates", "type": "security", "label": "6 · Gates", "sublabel": "local · lab worker", "tag": "split", "pos": [694, 356], "size": [190, 72] },
+    { "id": "review", "type": "security", "label": "· Tiered review", "sublabel": "code · security · db", "tag": "human", "pos": [476, 356], "size": [190, 72] },
+    { "id": "commit", "type": "backend", "label": "7 · Commit", "sublabel": "consent · no trace", "pos": [258, 360], "size": [190, 64] },
+    { "id": "remember", "type": "database", "label": "· Remember", "sublabel": "memory · growth-log", "pos": [40, 360], "size": [190, 64] }
   ],
-  "phases": [
-    { "id": "understand", "label": "Understand", "fromCol": 0, "toCol": 1 },
-    { "id": "build", "label": "Build + verify", "fromCol": 2, "toCol": 4, "variant": "emphasis" },
-    { "id": "ship", "label": "Ship", "fromCol": 5, "toCol": 5, "variant": "dashed" }
+  "boundaries": [
+    { "kind": "region", "label": "the signature: test-first → falsify → gates", "wraps": ["failtest", "implement", "falsify", "gates"] }
   ],
-  "mainPath": ["search", "plan", "implement", "test", "review", "commit"],
-  "nodes": [
-    { "id": "search", "lane": "flow", "col": 0, "type": "frontend", "label": "Search & reuse", "sublabel": "before new code" },
-    { "id": "plan", "lane": "flow", "col": 1, "type": "frontend", "label": "Restate & plan", "sublabel": "steps · impact · roles" },
-    { "id": "implement", "lane": "flow", "col": 2, "type": "backend", "label": "Test then code", "sublabel": "smallest change" },
-    { "id": "test", "lane": "gates", "col": 3, "type": "security", "label": "Falsify + gates", "sublabel": "local · lab worker", "tag": "split", "width": 132 },
-    { "id": "review", "lane": "gates", "col": 4, "type": "security", "label": "Tiered review", "sublabel": "code · security · db", "tag": "human" },
-    { "id": "commit", "lane": "flow", "col": 5, "type": "backend", "label": "Commit", "sublabel": "author · consent · no trace", "width": 150 },
-    { "id": "remember", "lane": "record", "col": 5, "type": "database", "label": "Remember", "sublabel": "memory · growth-log" },
-    { "id": "fix", "lane": "loopback", "col": 3, "type": "messagebus", "label": "Fix & retry", "sublabel": "fault found" }
-  ],
-  "edges": [
-    { "from": "search", "to": "plan" },
-    { "from": "plan", "to": "implement" },
-    { "from": "implement", "to": "test", "variant": "emphasis" },
-    { "from": "test", "to": "review" },
-    { "from": "review", "to": "commit", "variant": "emphasis" },
-    { "from": "commit", "to": "remember", "label": "record" },
-    { "from": "test", "to": "fix", "label": "red", "variant": "security", "role": "error" },
-    { "from": "fix", "to": "implement", "label": "fix", "variant": "dashed", "role": "return" }
+  "connections": [
+    { "id": "e1", "from": "search", "to": "restate", "fromSide": "right", "toSide": "left" },
+    { "id": "e2", "from": "restate", "to": "impact", "fromSide": "right", "toSide": "left" },
+    { "id": "e3", "from": "impact", "to": "failtest", "fromSide": "right", "toSide": "left" },
+    { "id": "e4", "from": "failtest", "to": "implement", "fromSide": "right", "toSide": "left" },
+    { "id": "e5", "from": "implement", "to": "falsify", "variant": "emphasis", "fromSide": "bottom", "toSide": "top" },
+    { "id": "e6", "from": "falsify", "to": "gates", "fromSide": "left", "toSide": "right" },
+    { "id": "e7", "from": "gates", "to": "review", "fromSide": "left", "toSide": "right" },
+    { "id": "e8", "from": "review", "to": "commit", "fromSide": "left", "toSide": "right" },
+    { "id": "e9", "from": "commit", "to": "remember", "fromSide": "left", "toSide": "right" },
+    { "id": "loop", "from": "gates", "to": "failtest", "label": "red → fix", "variant": "dashed", "fromSide": "top", "toSide": "bottom", "labelDx": 54 }
   ],
   "cards": [
-    { "dot": "emerald", "title": "One happy path", "items": ["Search and reuse before writing new code", "A failing test first, then the smallest change", "Guarded commit: author pinned, consent-gated, no AI trace"] },
-    { "dot": "rose", "title": "Gates, not vibes", "items": ["Every test is falsified before it is trusted", "Heavy suites split local + lab worker in parallel", "Review is tiered to what the change touches"] },
-    { "dot": "cyan", "title": "The loop", "items": ["A red gate or a review finding returns to the fix", "Nothing ships before the suites are green", "What was learned is recorded for the weekly review"] }
+    { "dot": "emerald", "title": "The happy path", "items": ["Search and reuse before writing new code", "Restate as numbered steps, map the impact", "A failing test first, then the smallest change"] },
+    { "dot": "rose", "title": "The signature move", "items": ["Falsify every test: disable it, watch the guard fail alone", "Focused gates; heavy suites split local + lab worker", "Nothing ships before the suites are green"] },
+    { "dot": "cyan", "title": "Ship + remember", "items": ["Tiered review to what the change touches", "Guarded commit: author pinned, consent-gated, no AI trace", "The lesson is recorded for the weekly review"] }
   ]
 }
