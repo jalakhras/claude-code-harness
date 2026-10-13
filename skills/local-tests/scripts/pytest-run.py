@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 """Run a pytest suite on the machine and print only a fixed-size summary.
 
-The third token-noisy suite, after Playwright and .NET. A large project's raw
-`-q` output is a wall of dots and its failures carry full assertion diffs; none of
-that belongs in the agent's context. This prints counts and, per failure, the test
-id and the first meaningful assertion line. A failure being fixed is then opened
-deliberately, by name.
+The third token-noisy suite, after Playwright and .NET. One project here is 300+
+tests whose raw `-q` output is a wall of dots and whose failures carry full
+assertion diffs; none of that belongs in Claude's context. This prints counts
+and, per failure, the test id and the first meaningful assertion line. A failure
+being fixed is then opened deliberately, by name.
 
   python pytest-run.py [--cwd <dir>] [<pytest args...>]
-  python pytest-run.py --cwd path/to/project tests/test_example.py
-  python pytest-run.py --cwd path/to/project -k "unit or integration"
+  python pytest-run.py --cwd D:/Projects/kairos-engine tests/test_reference.py
+  python pytest-run.py --cwd D:/Projects/kairos-engine -k "reference or degrees"
 
 What it does:
 
@@ -50,27 +50,42 @@ def run_pytest(cwd, args, report, only=None):
 
 
 def parse(report):
-    """Returns (counts, [(node id, first lines of the failure)])."""
+    """Returns (counts, [(node id, first lines of the failure)], ran-node-id set)."""
     root = ET.parse(report).getroot()
     suite = root.find("testsuite") if root.tag == "testsuites" else root
     counts = {}
     for key in ("tests", "failures", "errors", "skipped"):
         counts[key] = int(suite.get(key, 0) or 0)
     fails = []
+    ran = set()
     for case in suite.iter("testcase"):
+        node = (case.get("classname") or "") + "::" + (case.get("name") or "")
+        ran.add(node)
         bad = case.find("failure")
         if bad is None:
             bad = case.find("error")
         if bad is None:
             continue
-        node = (case.get("classname") or "") + "::" + (case.get("name") or "")
         text = (bad.get("message") or "") + "\n" + (bad.text or "")
         lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
         keep = [ln for ln in lines if ln.startswith(("E ", "assert", "Assertion", ">"))]
         if not keep:
             keep = lines
         fails.append((node, " | ".join(keep[:FIRST_LINES])[:400]))
-    return counts, fails
+    return counts, fails, ran
+
+
+def classify_rerun(fails, ran, rerun_failed):
+    """Split originally-failing nodes into (flaky, still).
+
+    A node is flaky ONLY if the rerun actually re-ran it AND it passed. A node
+    missing from the rerun (e.g. a node id pytest could not re-collect) stays
+    FAILED — never silently downgraded to flaky, which would be a false green.
+    """
+    flaky = [n for n, _ in fails if n in ran and n not in rerun_failed]
+    flaky_set = set(flaky)
+    still = [(n, m) for n, m in fails if n not in flaky_set]
+    return flaky, still
 
 
 def node_ids(cwd, fails):
@@ -84,6 +99,20 @@ def node_ids(cwd, fails):
         else:
             out.append(name)
     return out
+
+
+#: pytest exit codes we can trust a report for: 0 = all passed, 1 = tests failed.
+#: 2 interrupted, 3 internal error, 4 usage error, 5 no tests collected — any of
+#: these means the report (if any) is not a clean verdict, even when it parses.
+def verdict(counts, still_failures, returncode):
+    """Return (exit_code, reason|None). A green verdict requires a trustworthy run."""
+    if returncode not in (0, 1):
+        return 1, f"pytest exited {returncode} (interrupted/collection error)"
+    if counts.get("tests", 0) == 0:
+        return 1, "no tests were collected"
+    if still_failures:
+        return 1, f"{len(still_failures)} failed"
+    return 0, None
 
 
 def ollama_triage(host, model, summary):
@@ -136,7 +165,7 @@ def main():
         if not report.exists():
             print("# pytest-run summary\n\nNo report produced - collection likely failed.")
             return code or 1
-        counts, fails = parse(report)
+        counts, fails, _ = parse(report)
 
         flaky = []
         still = list(fails)
@@ -144,15 +173,18 @@ def main():
             again = Path(tmp) / "again.xml"
             run_pytest(cwd, args, again, only=node_ids(cwd, fails))
             if again.exists():
-                _, second = parse(again)
-                bad = set(n for n, _ in second)
-                flaky = [n for n, _ in fails if n not in bad]
-                still = [(n, m) for n, m in fails if n in bad]
+                _, second, ran = parse(again)
+                rerun_failed = set(n for n, _ in second)
+                flaky, still = classify_rerun(fails, ran, rerun_failed)
 
+        exit_code, reason = verdict(counts, still, code)
         out = ["# pytest-run summary", "",
                "- tests: " + str(counts["tests"]) + " - **failed: " + str(len(still))
                + "** - flaky: " + str(len(flaky)) + " - skipped: " + str(counts["skipped"]),
                ""]
+        if reason:
+            out.append("**FAILED - " + reason + "**")
+            out.append("")
         if still:
             out.append("## Failures")
             for node, msg in still[:a.max_failures]:
@@ -165,7 +197,7 @@ def main():
             out.append("\n## Flaky (passed on the re-run)")
             for n in flaky:
                 out.append("- " + n)
-        if not still and not flaky:
+        if not reason and not flaky:
             out.append("All tests passed.")
         summary = "\n".join(out)
         print(summary)
@@ -173,7 +205,7 @@ def main():
             triage = ollama_triage(a.host, a.model, summary)
             if triage:
                 print(triage)
-        return 1 if still else 0
+        return exit_code
 
 
 if __name__ == "__main__":

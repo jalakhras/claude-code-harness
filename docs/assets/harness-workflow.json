@@ -1,0 +1,52 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "The path a change takes",
+    "output": "harness-workflow.html",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "views": [
+      { "id": "happy", "label": "The happy path", "focus": ["search", "plan", "implement", "test", "review", "commit"], "note": "Search and plan, then build test-first and pass the gates before a guarded commit." },
+      { "id": "gates", "label": "Gates and proof", "focus": ["implement", "test", "review", "commit"], "note": "Falsify every test; heavy suites split onto the lab worker; review is tiered." },
+      { "id": "loop", "label": "When a gate is red", "focus": ["test", "fix", "implement", "review"], "note": "A failed falsification or a review finding loops straight back to the fix." }
+    ]
+  },
+  "lanes": [
+    { "id": "flow", "label": "Change" },
+    { "id": "gates", "label": "Gates" },
+    { "id": "record", "label": "Record" },
+    { "id": "loopback", "label": "Loop back", "variant": "exception" }
+  ],
+  "phases": [
+    { "id": "understand", "label": "Understand", "fromCol": 0, "toCol": 1 },
+    { "id": "build", "label": "Build + verify", "fromCol": 2, "toCol": 4, "variant": "emphasis" },
+    { "id": "ship", "label": "Ship", "fromCol": 5, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["search", "plan", "implement", "test", "review", "commit"],
+  "nodes": [
+    { "id": "search", "lane": "flow", "col": 0, "type": "frontend", "label": "Search & reuse", "sublabel": "before new code" },
+    { "id": "plan", "lane": "flow", "col": 1, "type": "frontend", "label": "Restate & plan", "sublabel": "steps · impact · roles" },
+    { "id": "implement", "lane": "flow", "col": 2, "type": "backend", "label": "Test then code", "sublabel": "smallest change" },
+    { "id": "test", "lane": "gates", "col": 3, "type": "security", "label": "Falsify + gates", "sublabel": "local · lab worker", "tag": "split", "width": 132 },
+    { "id": "review", "lane": "gates", "col": 4, "type": "security", "label": "Tiered review", "sublabel": "code · security · db", "tag": "human" },
+    { "id": "commit", "lane": "flow", "col": 5, "type": "backend", "label": "Commit", "sublabel": "author · consent · no trace", "width": 150 },
+    { "id": "remember", "lane": "record", "col": 5, "type": "database", "label": "Remember", "sublabel": "memory · growth-log" },
+    { "id": "fix", "lane": "loopback", "col": 3, "type": "messagebus", "label": "Fix & retry", "sublabel": "fault found" }
+  ],
+  "edges": [
+    { "from": "search", "to": "plan" },
+    { "from": "plan", "to": "implement" },
+    { "from": "implement", "to": "test", "variant": "emphasis" },
+    { "from": "test", "to": "review" },
+    { "from": "review", "to": "commit", "variant": "emphasis" },
+    { "from": "commit", "to": "remember", "label": "record" },
+    { "from": "test", "to": "fix", "label": "red", "variant": "security", "role": "error" },
+    { "from": "fix", "to": "implement", "label": "fix", "variant": "dashed", "role": "return" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "One happy path", "items": ["Search and reuse before writing new code", "A failing test first, then the smallest change", "Guarded commit: author pinned, consent-gated, no AI trace"] },
+    { "dot": "rose", "title": "Gates, not vibes", "items": ["Every test is falsified before it is trusted", "Heavy suites split local + lab worker in parallel", "Review is tiered to what the change touches"] },
+    { "dot": "cyan", "title": "The loop", "items": ["A red gate or a review finding returns to the fix", "Nothing ships before the suites are green", "What was learned is recorded for the weekly review"] }
+  ]
+}

@@ -93,6 +93,16 @@ if (Test-Path $skillsSrc) {
   }
 }
 
+# lab scripts published to ~/.claude/scripts/lab
+$labSrc = Join-Path $RepoRoot 'scripts\lab'
+if (Test-Path $labSrc) {
+  Get-ChildItem $labSrc -File | ForEach-Object {
+    $dst = Join-Path $ClaudeRoot "scripts\lab\$($_.Name)"
+    if (-not (Test-Path $dst)) { Say "  MISSING: lab/$($_.Name)" 'Red'; $script:issues++ }
+    else { Say "  OK:      lab/$($_.Name)" 'DarkGreen' }
+  }
+}
+
 # MCP servers registered at user scope (available to every session)
 $mcpManifest = Join-Path $RepoRoot 'mcp\servers.json'
 if (Test-Path $mcpManifest) {

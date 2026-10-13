@@ -40,6 +40,35 @@ pytest run of one file still carries every assertion diff it produces. The three
 runners are zero-config (`--cwd` defaults to `.`). Writing tests, falsifying them
 and fixing the code stay Claude's job; the local model edits nothing.
 
+## Long suites run on the lab worker | الحِزم الطويلة على جهاز العامل
+
+A second machine (`lab-worker1`) exists to cut the **wall-clock**, not to move every
+test off this one. **Heavy suites are split across both machines in parallel** with
+`scripts/lab/run-split.ps1`: `-Mode byType` (.NET here, Playwright there — the
+default) or `-Mode byProject` (.NET projects and Playwright shards on both); one
+merged verdict, wall ≈ the longer half. `scripts/lab/run-on-worker.ps1` alone puts a
+whole suite on the worker (sync, fingerprint, evidence, same fixed-size summary).
+**Focused** runs (one class, one spec) stay local — the round trip is not worth it.
+**Falsification, review and builds for the change in hand stay on this machine**;
+the worker carries suites, not the edit-test loop.
+
+- **Probe first:** `ssh -o BatchMode=yes lab-worker1 true`. If the worker is down,
+  **say so and run locally — do not wait for it.** The script does this fallback
+  automatically (unreachable / sync failed / ssh 255 → local); a suite that *ran*
+  on the worker and failed is reported, never silently re-run locally.
+- **Do not edit files while a run is in flight on the worker** (a file changing
+  mid-run wastes the run — the local `Discipline` rule, over the wire).
+- **One run at a time on the worker:** another session's live run makes it *busy*
+  (the scripts check and fall back); never start a second sync by hand under it.
+- **Self-repair is fenced (a fenced self-repair permission):** on an *environment* failure
+  the session may `ssh` in to fix it — restart/recreate the test SQL container,
+  restart services, re-sync, clean temp/old test DBs, reinstall project toolchains
+  (.NET/Node/Playwright) — and **nothing else**: no users, no SSH/network/firewall,
+  no OS upgrade, nothing outside `~/lab` / `~/work`, and never print or store a
+  password. **Two repair attempts at most**, then fall back to the main machine and
+  record every worker action in the report (`05-guardrails` G11; `85-security`
+  owned-asset fence). Full scope and traps: `scripts/lab/README.md`.
+
 ## Falsify every new test | تكذيب كل اختبار
 
 Before reporting a fix, disable it and watch the guard **fail alone**, then

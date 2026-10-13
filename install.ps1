@@ -237,6 +237,27 @@ if (Test-Path $SkillsSrc) {
   }
 }
 
+# --- 2e. Lab scripts: publish scripts/lab/ so any session can offload suites -
+Say "`n[lab] scripts" 'Cyan'
+$LabSrc = Join-Path $RepoRoot 'scripts\lab'
+$LabDst = Join-Path $ClaudeRoot 'scripts\lab'
+if (Test-Path $LabSrc) {
+  Get-ChildItem $LabSrc -File -Recurse | Where-Object { $_.FullName -notmatch '\\\.pytest_cache\\' -and $_.Extension -notin @('.pyc', '.pyo') } | ForEach-Object {
+    $rel = $_.FullName.Substring($LabSrc.Length).TrimStart('\', '/')
+    $dst = Join-Path $LabDst $rel
+    if ($_.Extension -eq '.md') { Do-Write $dst (Expand-Tokens (Read-Utf8 $_.FullName)) }
+    else {
+      if (-not $DryRun) {
+        $d = Split-Path -Parent $dst
+        if (-not (Test-Path $d)) { New-Item -ItemType Directory -Force -Path $d | Out-Null }
+        Copy-Item $_.FullName $dst -Force
+        Say "  copied: $dst" 'DarkGreen'
+      } else { Say "  would copy: $dst" 'DarkYellow' }
+    }
+    $managed += $dst
+  }
+}
+
 # --- 2f. MCP servers: register at USER scope so every session has them -------
 # Uses the official `claude mcp` CLI (never hand-edits the live ~/.claude.json).
 Say "`n[mcp] servers" 'Cyan'

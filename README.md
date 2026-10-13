@@ -16,14 +16,7 @@ instead of re-explaining it in every prompt.
 
 > Optimize the context window. Persist everything else.
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/harness-architecture.dark.png">
-    <img alt="claude-harness architecture — from repo to every session" src="docs/assets/harness-architecture.light.png" width="100%">
-  </picture>
-</p>
-
-<p align="center"><sub>▶ Interactive, animated version (pan · zoom · guided views · trace): <a href="docs/assets/harness-architecture.html"><code>docs/assets/harness-architecture.html</code></a> · 📖 <a href="docs/TOOLS.md">Full tool catalog</a></sub></p>
+<p align="center"><sub>📖 <a href="docs/TOOLS.md">Full tool catalog</a> · architecture &amp; flow diagrams below</sub></p>
 
 This repository is the **public guide** to the harness: what it is, why it exists,
 how it is built, how to stand one up yourself, and — plainly — **what data leaves
@@ -99,68 +92,14 @@ single source of truth; `~/.claude/` is generated from it and never hand-edited.
 
 ## Architecture
 
-```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'fontFamily':'system-ui, -apple-system, sans-serif', 'lineColor':'#94a3b8'}}}%%
-graph TD
-  subgraph SOT["Source of truth · git repo"]
-    RULES["rules/ — always-loaded standards"]
-    STACKS["rules/stacks/ — per-language, path-scoped"]
-    HOOKS["hooks/ — event guards"]
-    AGENTS["agents/ — review &amp; planning specialists"]
-    SKILLS["skills/ — on-demand workflows"]
-    PROJECTS["projects/ — per-repo rules"]
-    INSTALL["install.ps1 · setup.ps1 · doctor.ps1"]
-  end
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/harness-architecture.dark.png">
+    <img alt="claude-harness architecture — from repo to every session" src="docs/assets/harness-architecture.light.png" width="100%">
+  </picture>
+</p>
 
-  subgraph CC["~/.claude · what Claude Code reads"]
-    CLAUDEMD["CLAUDE.md — @imports the rules"]
-    RH["rules/harness/*"]
-    HH["hooks/harness/* · settings.json"]
-    AH["agents/*"]
-    SH["skills/*"]
-  end
-
-  subgraph RUNTIME["Every session"]
-    LENS["Role lenses · BA · PM · Architect · Dev · QA · Security"]
-    WF["Workflow · search → understand → plan → test → falsify → review → commit"]
-    GUARD["Hooks block killer mistakes, warn on the rest"]
-    LOCAL["Local runners · tests · transcription · analysis · off the token bill"]
-  end
-
-  subgraph LEARN["Improvement loop"]
-    LOG["growth log · one line per session"]
-    REVIEW["weekly review · distil recurring lessons"]
-    AUDIT["audit · is it actually in force?"]
-  end
-
-  INSTALL -->|generates & copies| CLAUDEMD
-  RULES --> RH
-  STACKS --> RH
-  HOOKS --> HH
-  AGENTS --> AH
-  SKILLS --> SH
-  PROJECTS -->|installed into each repo| CC
-
-  CLAUDEMD --> WF
-  RH --> WF
-  RH --> LENS
-  HH --> GUARD
-  SH --> LOCAL
-
-  WF --> LOG
-  LOG --> REVIEW
-  REVIEW -->|approved promotions| RULES
-  AUDIT -.checks.-> CC
-
-  classDef sot fill:#eef2ff,stroke:#6366f1,color:#312e81;
-  classDef cc fill:#ecfeff,stroke:#06b6d4,color:#0e7490;
-  classDef rt fill:#f0fdf4,stroke:#22c55e,color:#166534;
-  classDef ln fill:#fef9c3,stroke:#eab308,color:#854d0e;
-  class RULES,STACKS,HOOKS,AGENTS,SKILLS,PROJECTS,INSTALL sot;
-  class CLAUDEMD,RH,HH,AH,SH cc;
-  class LENS,WF,GUARD,LOCAL rt;
-  class LOG,REVIEW,AUDIT ln;
-```
+<p align="center"><sub>▶ Interactive, animated (pan · zoom · guided views · trace): <a href="docs/assets/harness-architecture.html"><code>docs/assets/harness-architecture.html</code></a></sub></p>
 
 ---
 
@@ -170,78 +109,14 @@ The architecture shows the *pieces*. This shows the *flow* — what happens, in
 order, from the moment you give the agent a task to a committed change. The harness
 intercepts at each step: rules shape it, hooks guard it, local runners keep it cheap.
 
-```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'fontFamily':'system-ui, -apple-system, sans-serif', 'lineColor':'#94a3b8'}}}%%
-flowchart TB
-  START([Task from you]) --> S0
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/harness-workflow.dark.png">
+    <img alt="the path a change takes" src="docs/assets/harness-workflow.light.png" width="100%">
+  </picture>
+</p>
 
-  subgraph P1["Phase 1 · Understand and plan"]
-    S0["<b>Step 0 · Search and reuse</b><br/>libraries · prior art · existing code"]
-    S1["<b>Step 1 · Understand</b><br/>classify size: spike · bounded · architectural"]
-    AMB{"Ambiguous?"}
-    ASK["Ask one sharp question"]
-    RESTATE["<b>Restate as small numbered steps</b><br/>shown before any action"]
-    S2["<b>Step 2 · Impact map</b><br/>grep the essence, not the name"]
-    S0 --> S1 --> AMB
-    AMB -->|yes| ASK --> RESTATE
-    AMB -->|no| RESTATE
-    RESTATE --> S2
-  end
-
-  subgraph P2["Phase 2 · Build and prove"]
-    S3["<b>Step 3 · Failing test first</b><br/>unit + integration"]
-    S4["<b>Step 4 · Implement</b><br/>smallest change that passes"]
-    S5{"<b>Step 5 · Falsify</b><br/>disable fix — guard fails alone?"}
-    S3 --> S4 --> S5
-    S5 -->|guard dead| S3
-  end
-
-  subgraph P3["Phase 3 · Gate and review"]
-    S6["<b>Step 6 · Focused gates</b><br/>local runners → summary · measure perf"]
-    GREEN{"All green?"}
-    REVIEW["<b>Review pass</b><br/>reviewers · security when triggered"]
-    S6 --> GREEN -->|yes| REVIEW
-  end
-
-  subgraph P4["Phase 4 · Ship"]
-    S7["<b>Step 7 · Document</b><br/>docs + numbered manual-test scenario"]
-    CONSENT{"Commit authorized?"}
-    COMMIT["<b>Commit</b> as owner · English · no AI trace"]
-    MIGRATE["Say if restart / migration needed"]
-    LESSON["Lesson → growth log"]
-    S7 --> CONSENT -->|yes| COMMIT --> MIGRATE --> LESSON
-  end
-
-  S2 --> S3
-  S5 -->|guard live| S6
-  GREEN -->|no| S4
-  REVIEW --> S7
-  CONSENT -->|no| WAIT(["Leave uncommitted ·<br/>report status"])
-  LESSON --> DONE(["<b>Done</b> · tested · falsified ·<br/>reviewed · documented · one commit"])
-
-  GUARD[["Hooks guard throughout ·<br/>destructive-ops · authorship ·<br/>build / history · push review"]]
-  GUARD -.watches.-> S4
-  GUARD -.watches.-> COMMIT
-
-  style P1 fill:#fafafa,stroke:#e5e7eb,color:#0f172a;
-  style P2 fill:#fafafa,stroke:#e5e7eb,color:#0f172a;
-  style P3 fill:#fafafa,stroke:#e5e7eb,color:#0f172a;
-  style P4 fill:#fafafa,stroke:#e5e7eb,color:#0f172a;
-  classDef entry fill:#e0e7ff,stroke:#6366f1,color:#312e81;
-  classDef step fill:#eff6ff,stroke:#3b82f6,color:#1e3a8a;
-  classDef decision fill:#fff7ed,stroke:#f97316,color:#7c2d12;
-  classDef sig fill:#fae8ff,stroke:#a21caf,color:#701a75;
-  classDef done fill:#dcfce7,stroke:#22c55e,color:#166534;
-  classDef wait fill:#f1f5f9,stroke:#94a3b8,color:#334155;
-  classDef guard fill:#fef2f2,stroke:#ef4444,color:#991b1b;
-  class START entry;
-  class S0,S1,RESTATE,ASK,S2,S3,S4,S6,REVIEW,S7,COMMIT,MIGRATE,LESSON step;
-  class AMB,GREEN,CONSENT decision;
-  class S5 sig;
-  class WAIT wait;
-  class DONE done;
-  class GUARD guard;
-```
+<p align="center"><sub>▶ Interactive: <a href="docs/assets/harness-workflow.html"><code>docs/assets/harness-workflow.html</code></a></sub></p>
 
 Weekly, the growth log feeds the **improvement loop**: recurring lessons are
 distilled and — with your approval — promoted into a rule, so the path itself gets

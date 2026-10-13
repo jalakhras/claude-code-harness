@@ -12,7 +12,7 @@ triage is appended; without it the summary stands on its own.
                    [--max-failures 12] <playwright test args…>
 
   python pw-run.py return-to --project=desktop
-  python pw-run.py --cwd <projects>/x/angular return-to preview exam-form
+  python pw-run.py --cwd D:/Projects/x/angular return-to preview exam-form
 """
 from __future__ import annotations
 
@@ -20,29 +20,81 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.request
 from pathlib import Path
 
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
 NOISE = re.compile(r"^\[WebServer\]|^\s*$")
+#: the `line` reporter prints a running "[k/n] <title>" counter we throttle on
+LINE_COUNTER = re.compile(r"\[(\d+)/(\d+)\]")
 LLM_TIMEOUT_S = 120
 MAX_ERROR_LINES = 3
 
 
-def run_playwright(cwd: Path, args: list[str], report: Path) -> int:
+def parse_counter(line: str):
+    """Pull (done, total) from a Playwright `line` reporter row, or None."""
+    m = LINE_COUNTER.search(line)
+    return (int(m.group(1)), int(m.group(2))) if m else None
+
+
+def playwright_invocation(args: list[str], report: Path, progress: bool = False, html_dir: Path | None = None):
+    """The `npx playwright test` command and environment for one run.
+
+    Our --reporter replaces the config's reporters, so the HTML report exists only
+    when html_dir asks for it. With progress, the `line` reporter feeds the "[k/n]"
+    tick; the json reporter always writes the file the summary reads."""
     env = {**os.environ, "PLAYWRIGHT_JSON_OUTPUT_NAME": str(report), "FORCE_COLOR": "0"}
-    cmd = ["npx", "playwright", "test", *args, "--reporter=json"]
-    proc = subprocess.run(cmd, cwd=cwd, env=env, shell=(os.name == "nt"), capture_output=True, text=True, encoding="utf-8", errors="replace")
+    reporters = (["line"] if progress else []) + ["json"]
+    if html_dir is not None:
+        reporters.append("html")
+        env["PLAYWRIGHT_HTML_OUTPUT_DIR"] = str(html_dir)
+        env["PLAYWRIGHT_HTML_OPEN"] = "never"
+    return ["npx", "playwright", "test", *args, f"--reporter={','.join(reporters)}"], env
+
+
+def copy_artifacts(cwd: Path, dest: Path) -> int:
+    """Copy test-results/ (traces, screenshots, error context) to dest. Returns 1 if
+    copied, 0 if the run left none. Called before the failure re-run, which wipes it."""
+    src = Path(cwd) / "test-results"
+    if not src.is_dir():
+        return 0
+    shutil.copytree(src, Path(dest) / "test-results", dirs_exist_ok=True)
+    return 1
+
+
+def run_playwright(cwd: Path, args: list[str], report: Path, progress: bool = False, interval: int = 30,
+                   html_dir: Path | None = None) -> int:
+    cmd, env = playwright_invocation(args, report, progress, html_dir)
+    if not progress:
+        proc = subprocess.run(cmd, cwd=cwd, env=env, shell=(os.name == "nt"), capture_output=True, text=True, encoding="utf-8", errors="replace")
+        out, rc = proc.stdout + proc.stderr, proc.returncode
+    else:
+        proc = subprocess.Popen(cmd, cwd=cwd, env=env, shell=(os.name == "nt"), stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace")
+        lines, last, latest = [], time.monotonic(), None
+        for line in proc.stdout:
+            lines.append(line)
+            c = parse_counter(line)
+            if c:
+                latest = c
+            if latest and time.monotonic() - last >= interval:
+                sys.stderr.write(f"[pw-run] progress: {latest[0]}/{latest[1]} tests\n")
+                sys.stderr.flush()
+                last = time.monotonic()
+        proc.wait()
+        out, rc = "".join(lines), proc.returncode
     if not report.exists():
         # The runner died before writing a report: a config error, a missing spec
         # name, a dev server that never came up. Show the tail, nothing else.
-        tail = [ANSI.sub("", l) for l in (proc.stdout + proc.stderr).splitlines() if not NOISE.match(l)]
+        tail = [ANSI.sub("", l) for l in out.splitlines() if not NOISE.match(l)]
         print("[pw-run] no report written; runner output tail:")
         print("\n".join(tail[-15:]))
-    return proc.returncode
+    return rc
 
 
 def walk(suite: dict, prefix: str = ""):
@@ -70,7 +122,23 @@ def read_report(report: Path):
             "errors": [ANSI.sub("", e.get("message", "")) for e in result.get("errors", [])],
             "attachments": [a.get("path", "") for a in result.get("attachments", []) if a.get("path")],
         })
-    return rows, data.get("stats", {})
+    # Top-level errors are global failures (webServer never came up, config error)
+    # that leave specs un-run — a report can parse to zero rows and still be a bust.
+    return rows, data.get("stats", {}), data.get("errors", []) or []
+
+
+def verdict(rows, errors, still_failures):
+    """Return (exit_code, reason|None). A green verdict needs tests that actually ran."""
+    if errors:
+        e = errors[0]
+        first = (e.get("message") or e.get("value") or "") if isinstance(e, dict) else str(e)
+        line = ANSI.sub("", first).strip().splitlines()[0][:200] if first else "global runner error"
+        return 1, "runner error: " + line
+    if not rows:
+        return 1, "no tests were run"
+    if still_failures:
+        return 1, f"{len(still_failures)} failed"
+    return 0, None
 
 
 def failed(rows):
@@ -134,32 +202,48 @@ def ollama_triage(host: str, model: str, summary: str) -> str | None:
     return "[triage · " + model + "]\n" + "\n".join("  " + l.strip() for l in lines)
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+def parse_cli(argv):
+    """(our options, Playwright's args in their original order).
+
+    parse_known_args, not REMAINDER: a REMAINDER positional rejected "--project=…" unless a spec
+    path came first. Anything we do not know passes through untouched; a `--` separator is
+    accepted and dropped. allow_abbrev=False so a Playwright option is never read as a prefix of
+    ours. (`--max-failures` is ours — the summary cap — not Playwright's stop-after-N.)"""
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
+                                 allow_abbrev=False)
     ap.add_argument("--cwd", default=".", help="the Playwright project directory (where playwright.config lives)")
     ap.add_argument("--no-llm", action="store_true", help="skip the local-model triage")
     ap.add_argument("--no-rerun", action="store_true", help="do not re-run failures once")
     ap.add_argument("--model", default="qwen2.5:7b")
     ap.add_argument("--host", default="http://localhost:11434")
     ap.add_argument("--max-failures", type=int, default=12)
-    ap.add_argument("args", nargs=argparse.REMAINDER, help="passed to `npx playwright test`")
-    a = ap.parse_args()
+    ap.add_argument("--progress", action="store_true", help="emit a periodic progress line to stderr")
+    ap.add_argument("--progress-interval", type=int, default=30, help="seconds between progress lines")
+    ap.add_argument("--html-report", default="", help="also write the HTML report to this directory (evidence)")
+    ap.add_argument("--artifacts-dir", default="", help="copy test-results/ (traces, screenshots) here before any re-run")
+    a, rest = ap.parse_known_args(argv)
+    return a, [x for x in rest if x != "--"]
+
+
+def main() -> int:
+    a, args = parse_cli(sys.argv[1:])
     cwd = Path(a.cwd).resolve()
     if not cwd.exists():
         print(f"[pw-run] no such directory: {cwd}")
         return 2
-    # `--` from the caller separating our flags from Playwright's
-    args = [x for x in a.args if x != "--"]
     if any(x.startswith("--reporter") for x in args):
         print("[pw-run] do not pass --reporter; the JSON reporter is what this script reads")
         return 2
 
     with tempfile.TemporaryDirectory() as tmp:
         report = Path(tmp) / "report.json"
-        code = run_playwright(cwd, args, report)
+        html_dir = Path(a.html_report).resolve() if a.html_report else None
+        code = run_playwright(cwd, args, report, a.progress, a.progress_interval, html_dir)
+        if a.artifacts_dir:
+            copy_artifacts(cwd, Path(a.artifacts_dir))
         if not report.exists():
             return code or 1
-        rows, stats = read_report(report)
+        rows, stats, errors = read_report(report)
         fails = failed(rows)
 
         reran = None
@@ -167,17 +251,20 @@ def main() -> int:
             rerun_report = Path(tmp) / "rerun.json"
             run_playwright(cwd, [*args, "--last-failed"], rerun_report)
             if rerun_report.exists():
-                again, _ = read_report(rerun_report)
+                again, _, _ = read_report(rerun_report)
                 reran = {key(r): r["status"] for r in again}
 
         summary = summarize(rows, stats, reran, a.max_failures)
         print(summary)
         still = [r for r in fails if reran is None or reran.get(key(r)) != "passed"]
+        exit_code, reason = verdict(rows, errors, still)
+        if reason and not still:  # infra/no-tests cases the counts line would hide
+            print("[pw-run] FAILED - " + reason)
         if still and not a.no_llm:
             triage = ollama_triage(a.host, a.model, summary)
             if triage:
                 print(triage)
-        return 1 if still else 0
+        return exit_code
 
 
 if __name__ == "__main__":
