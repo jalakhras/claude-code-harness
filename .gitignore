@@ -9,3 +9,6 @@ node_modules/
 # Python build artifacts
 __pycache__/
 *.pyc
+
+# archify visual-check evidence (regenerable; keep the clean .light/.dark previews)
+docs/assets/*.visual-check.*

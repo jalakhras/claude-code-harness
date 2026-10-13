@@ -237,6 +237,27 @@ if (Test-Path $SkillsSrc) {
   }
 }
 
+# --- 2f. MCP servers: register at USER scope so every session has them -------
+# Uses the official `claude mcp` CLI (never hand-edits the live ~/.claude.json).
+Say "`n[mcp] servers" 'Cyan'
+$McpManifest = Join-Path $RepoRoot 'mcp\servers.json'
+if (Test-Path $McpManifest) {
+  $claude = (Get-Command claude -ErrorAction SilentlyContinue)
+  if (-not $claude) {
+    Say "  (claude CLI not on PATH; skipped - register manually per mcp/README.md)" 'Yellow'
+  } else {
+    $mcp = Read-Utf8 $McpManifest | ConvertFrom-Json
+    foreach ($s in $mcp.servers) {
+      if ($DryRun) { Say "  would register (user): $($s.name)" 'DarkYellow'; continue }
+      & claude mcp remove --scope user $s.name *> $null   # idempotent re-register
+      $addArgs = @('mcp', 'add', '--scope', 'user', '--transport', $s.transport, $s.name, '--', $s.command) + @($s.args)
+      & claude @addArgs *> $null
+      if ($LASTEXITCODE -eq 0) { Say "  registered (user): $($s.name)" 'DarkGreen' }
+      else { Say "  FAILED to register: $($s.name) (claude mcp add exit $LASTEXITCODE)" 'Yellow' }
+    }
+  }
+}
+
 # --- 3. Manifest (for doctor / uninstall) -----------------------------------
 Say "`n[3/4] manifest" 'Cyan'
 $manifestObj = [ordered]@{

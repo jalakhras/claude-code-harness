@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "claude-harness — from repo to every session",
+    "output": "harness-architecture.html",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "views": [
+      { "id": "install", "label": "Source to sessions", "focus": ["author", "repo", "install", "claudedir", "session"], "note": "Edit the repo; install.ps1 generates ~/.claude; every session loads it." },
+      { "id": "tools", "label": "What a session loads", "focus": ["session", "skills", "mcp", "runners"], "note": "Rules, skills, agents and MCP servers reach the session." },
+      { "id": "guards", "label": "Guards and proof", "focus": ["session", "hooks", "runners", "worker"], "note": "Hooks fence every tool call; heavy suites split onto the lab worker." }
+    ]
+  },
+  "components": [
+    { "id": "author", "type": "external", "label": "You", "sublabel": "edit the repo", "pos": [40, 310], "size": [130, 60] },
+    { "id": "repo", "type": "backend", "label": "claude-harness repo", "sublabel": "rules · skills · agents · hooks · mcp", "tag": "source of truth", "pos": [210, 306], "size": [185, 72] },
+    { "id": "install", "type": "backend", "label": "install.ps1", "sublabel": "generate + register", "pos": [473, 196], "size": [140, 60] },
+    { "id": "claudedir", "type": "cloud", "label": "~/.claude", "sublabel": "CLAUDE.md · settings.json", "pos": [453, 306], "size": [180, 72] },
+    { "id": "session", "type": "frontend", "label": "Claude Code session", "sublabel": "loads rules + tools", "pos": [700, 306], "size": [170, 72] },
+    { "id": "hooks", "type": "security", "label": "Guard hooks", "sublabel": "author · consent · push", "tag": "13", "pos": [695, 146], "size": [185, 68] },
+    { "id": "skills", "type": "backend", "label": "Skills + Agents", "sublabel": "dev-team · tdd · reviewers", "tag": "13 + 7", "pos": [945, 196], "size": [180, 68] },
+    { "id": "mcp", "type": "external", "label": "MCP servers", "sublabel": "chrome-devtools · claude-mem", "pos": [945, 306], "size": [180, 72] },
+    { "id": "runners", "type": "backend", "label": "Local-tests runners", "sublabel": "pw · pytest · dotnet", "pos": [945, 424], "size": [180, 64] },
+    { "id": "worker", "type": "cloud", "label": "Lab worker", "sublabel": "parallel split · evidence", "pos": [945, 544], "size": [180, 60] },
+    { "id": "vault", "type": "database", "label": "Knowledge vault", "sublabel": "memory · growth-log", "pos": [700, 452], "size": [170, 60] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "source of truth · git", "wraps": ["repo", "install"] },
+    { "kind": "security-group", "label": "every tool call fenced by hooks", "wraps": ["session", "hooks"] }
+  ],
+  "connections": [
+    { "id": "author-repo", "from": "author", "to": "repo", "label": "edits", "variant": "emphasis" },
+    { "id": "repo-install", "from": "repo", "to": "install", "label": "read by", "fromSide": "right", "toSide": "left" },
+    { "id": "install-claudedir", "from": "install", "to": "claudedir", "label": "writes", "fromSide": "bottom", "toSide": "top", "labelDy": 24 },
+    { "id": "claudedir-session", "from": "claudedir", "to": "session", "label": "loaded" },
+    { "id": "session-hooks", "from": "session", "to": "hooks", "label": "every tool call", "variant": "security", "fromSide": "top", "toSide": "bottom" },
+    { "id": "session-skills", "from": "session", "to": "skills", "label": "invoke", "fromSide": "right", "toSide": "left", "labelDy": -16 },
+    { "id": "session-mcp", "from": "session", "to": "mcp", "label": "tools", "fromSide": "right", "toSide": "left", "labelDy": 16 },
+    { "id": "session-runners", "from": "session", "to": "runners", "label": "run suites", "fromSide": "right", "toSide": "left" },
+    { "id": "runners-worker", "from": "runners", "to": "worker", "label": "offload · split", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelDy": 30 },
+    { "id": "session-vault", "from": "session", "to": "vault", "label": "recall · record", "fromSide": "bottom", "toSide": "top", "labelDy": 28 }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Source to sessions", "items": ["Edit the repo; install.ps1 generates ~/.claude", "doctor.ps1 verifies no drift"] },
+    { "dot": "emerald", "title": "What a session loads", "items": ["15 rules + 4 stacks, 13 skills, 7 agents", "chrome-devtools MCP, deferred until used"] },
+    { "dot": "rose", "title": "Guards and proof", "items": ["Author pinned · commit-consent · no AI trace", "Heavy suites split local + lab worker"] }
+  ]
+}

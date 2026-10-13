@@ -1,0 +1,12 @@
+{
+  "_comment": "Harness-managed MCP servers, registered at USER scope (all sessions) by install.ps1 via the official `claude mcp` CLI. Source of truth — edit here, not ~/.claude.json.",
+  "servers": [
+    {
+      "name": "chrome-devtools",
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["chrome-devtools-mcp@latest"],
+      "why": "Live-page performance traces (LCP), DOM/CSS, network/CORS, console and interaction for the Angular/Astro UI + performance lanes. Complements claude-in-chrome (which lacks performance tracing) and satisfies the 80-performance 'measure before/after' rule. Tools are deferred, so they cost no context until loaded."
+    }
+  ]
+}

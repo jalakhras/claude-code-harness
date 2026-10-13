@@ -93,6 +93,19 @@ if (Test-Path $skillsSrc) {
   }
 }
 
+# MCP servers registered at user scope (available to every session)
+$mcpManifest = Join-Path $RepoRoot 'mcp\servers.json'
+if (Test-Path $mcpManifest) {
+  if (Get-Command claude -ErrorAction SilentlyContinue) {
+    $mcp = Read-Utf8 $mcpManifest | ConvertFrom-Json
+    foreach ($s in $mcp.servers) {
+      & claude mcp get $s.name *> $null
+      if ($LASTEXITCODE -eq 0) { Say "  OK:      mcp $($s.name)" 'DarkGreen' }
+      else { Say "  MISSING: mcp $($s.name) (run install.ps1)" 'Red'; $script:issues++ }
+    }
+  } else { Say "  (claude CLI not found; mcp check skipped)" 'DarkGray' }
+}
+
 Say ""
 if ($issues -eq 0) { Say "Clean. No drift." 'Green'; exit 0 }
 else { Say "$issues issue(s) found. Re-run install.ps1 to restore." 'Yellow'; exit 1 }

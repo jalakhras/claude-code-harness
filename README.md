@@ -1,10 +1,29 @@
 # Claude Code Harness
 
+<p align="center">
+  <img alt="Claude Code" src="https://img.shields.io/badge/Claude_Code-harness-d97757?style=flat-square">
+  <img alt="rules" src="https://img.shields.io/badge/rules-15_+_4_stacks-0969da?style=flat-square">
+  <img alt="skills" src="https://img.shields.io/badge/skills-13-6f42c1?style=flat-square">
+  <img alt="agents" src="https://img.shields.io/badge/agents-7-1f6feb?style=flat-square">
+  <img alt="hooks" src="https://img.shields.io/badge/hooks-13-cf222e?style=flat-square">
+  <img alt="MCP" src="https://img.shields.io/badge/MCP-1-2da44e?style=flat-square">
+  <img alt="PowerShell" src="https://img.shields.io/badge/Windows_PowerShell-5.1-012456?style=flat-square">
+</p>
+
 A personal operating system for [Claude Code](https://claude.com/claude-code):
 install your way of working **once**, and the agent follows it in every session —
 instead of re-explaining it in every prompt.
 
 > Optimize the context window. Persist everything else.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/harness-architecture.dark.png">
+    <img alt="claude-harness architecture — from repo to every session" src="docs/assets/harness-architecture.light.png" width="100%">
+  </picture>
+</p>
+
+<p align="center"><sub>▶ Interactive, animated version (pan · zoom · guided views · trace): <a href="docs/assets/harness-architecture.html"><code>docs/assets/harness-architecture.html</code></a> · 📖 <a href="docs/TOOLS.md">Full tool catalog</a></sub></p>
 
 This repository is the **public guide** to the harness: what it is, why it exists,
 how it is built, how to stand one up yourself, and — plainly — **what data leaves
