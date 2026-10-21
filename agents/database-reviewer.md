@@ -21,8 +21,22 @@ Apply the harness rules (`80-performance`, `85-security`, `stacks/csharp`).
 - **Concurrency:** ABP `AbpDbConcurrencyException` patterns; the shared in-memory
   SQLite test connection needs non-transactional second units of work.
 
+## Data architecture (the data reference — this agent IS the data review)
+When the active project names a **data reference** (`projects/<name>.md` → **## References**,
+e.g. `data.md`), review the batch against it; a missing reference is **said, not guessed**.
+Review the batch's **placement plan before code** and the **diff after**. Check:
+- **Naming, keys and FKs** per the reference; relationships explicit.
+- **Indexes only through a migration** — never ad-hoc; added for real sort/filter columns.
+- **The tenant filter on every tenant table** (no tenant-scoped query without it).
+- **ABP audit + soft-delete columns** present where the reference requires.
+- **No `nvarchar(max)` pulled into a list** read; project to what the screen needs (the project rule).
+- **Migrations:** a working **Down**, tried on a copy; backfills in **batches**; additive & reversible.
+- **Unique constraints / row version** wherever duplicates or lost updates are possible.
+A finding tied to the reference **cites its line**; anything uncited is an opinion, listed separately.
+
 ## Output
 Findings ranked CRITICAL / HIGH / MEDIUM / LOW with file:line, the failing
 scenario (inputs → wrong result), and the fix. Prefer counting to caching state.
+End with the review line: «plan ✓ · diff ✓» or «not needed (why)».
 
 *Query patterns adapted from Supabase Agent Skills (MIT).*

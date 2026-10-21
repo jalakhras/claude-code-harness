@@ -5,7 +5,7 @@
 ![Claude Code](https://img.shields.io/badge/Claude_Code-harness-d97757?style=flat-square)
 ![rules](https://img.shields.io/badge/rules-15_+_4_stacks-0969da?style=flat-square)
 ![skills](https://img.shields.io/badge/skills-13-6f42c1?style=flat-square)
-![agents](https://img.shields.io/badge/agents-7-1f6feb?style=flat-square)
+![agents](https://img.shields.io/badge/agents-14-1f6feb?style=flat-square)
 ![hooks](https://img.shields.io/badge/hooks-13-cf222e?style=flat-square)
 ![MCP](https://img.shields.io/badge/MCP_servers-1-2da44e?style=flat-square)
 ![runners](https://img.shields.io/badge/test_runners-3-bf8700?style=flat-square)
@@ -96,8 +96,17 @@ Imported into `~/.claude/CLAUDE.md` via `@import`, so they load **every session*
 | `/code-review`, `/code-review-expert` | 🌐 external | The two general reviewers; the pair runs on real logic. |
 | `csharp-reviewer` | 🤖 agent · sonnet | C#/.NET/ABP conventions, async, nullable, EF Core. |
 | `typescript-reviewer` | 🤖 agent · sonnet | TypeScript / Angular / Astro / Chrome-ext review. |
-| `database-reviewer` | 🤖 agent · sonnet | Queries, schema, migrations, pagination correctness. |
+| `database-reviewer` | 🤖 agent · sonnet | Queries, schema, migrations, pagination — **and data architecture** (keys/FKs, tenant filter, indexes via migration, projection). |
 | `security-reviewer` | 🤖 agent · sonnet | Auth, input, files, crypto, IDOR — the mandatory-trigger review. |
+| `arch-modules` | 🤖 agent · sonnet | Backend contexts + layering (logic in Domain/Application; one-way deps). Reads the project's `modules.md`. |
+| `arch-api` | 🤖 agent · sonnet | Endpoints, DTOs, errors, paging, permission-per-endpoint, tenant isolation, rate limits. Reads `api.md`. |
+| `arch-frontend` | 🤖 agent · sonnet | Folders, shared-component reuse, services-not-HTTP, tokens, routes, state, i18n. Reads `frontend.md`. |
+| `design-conformance` | 🤖 agent · sonnet | Values from the project's **design source only**; reuse the design-system component; reports drift, suggests nothing. |
+| `perf-reviewer` | 🤖 agent · sonnet | Applies `80-performance` across SQL/API/UI; a speed claim needs a before/after number. |
+| `ba-analyst` | 🤖 agent · sonnet | Maps each item → feature/story/acceptance test (before), checks acceptance (after); a gap is a question, never invented. |
+| `ux-review` | 🤖 agent · sonnet | Reviews screenshots (ar/en, phone/desktop): guidance, states, wording, a11y; design ideas go to the owner. |
+
+> Agents 8–14 are **generic & read-only**: each reads its rules from the active project's `projects/<name>.md` **References** section, cites the reference line it breaks (else it's an opinion), runs only on a batch that touches its part, and runs **in parallel** alongside `/code-review`.
 
 ## ⚡ 6 · Performance & design
 | Tool | Type | What it does |

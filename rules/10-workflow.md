@@ -48,6 +48,12 @@ Before touching a rule written in more than one place, `grep` its **essence, not
 its name** (e.g. `LevelId == null` lived in four places). List, in the explanation,
 who reads what you are about to change.
 
+**Placement plan (any batch that adds files, a recorded decision):** before code, one row per new
+thing — *what · where · why (the reference line it satisfies) · does something like it
+already exist?* Search first; **reuse beats a new one**. The architecture/`ba-analyst`
+agents whose parts the plan touches review it **before** code and check the diff
+**after** (`50-review`); the plan goes in the report.
+
 ## Step 3 — Failing test first | اختبار يفشل أولاً
 
 Reproduce what the owner reported or what you found, **on both layers** where the

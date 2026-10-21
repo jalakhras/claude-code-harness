@@ -18,12 +18,18 @@ not cause impact in areas nobody looked at.
 ## The plan
 1. **Restate** the request as **small, uniform, numbered steps** — every feature,
    change, or bug becomes such a list, and progress is reported against it.
-2. **Impact map:** for each step, who reads what it changes (grep the essence, not
+2. **Placement plan (before any code, for every batch that adds files)** — one row
+   per new thing: **what · where · why (the reference line it satisfies) · does
+   something like it already exist?** Search first (`65-roles` / `10-workflow` Step 0);
+   **reuse beats a new one**. The architecture/`ba-analyst` agents whose parts the plan
+   touches review it **before** code, and check the diff against it **after**. The plan
+   goes in the report.
+3. **Impact map:** for each step, who reads what it changes (grep the essence, not
    the name); which tests/guards protect that behavior.
-3. **Test plan:** the failing test(s) per step, on both layers where server-side,
+4. **Test plan:** the failing test(s) per step, on both layers where server-side,
    and where the **falsify** step applies.
-4. **Gates:** which focused checks run per step; when a full suite is warranted.
-5. **Risks & non-automatable parts** stated explicitly.
+5. **Gates:** which focused checks run per step; when a full suite is warranted.
+6. **Risks & non-automatable parts** stated explicitly.
 
 ## Output
 A numbered step list with, per step: the change, its readers/impact, its test, and

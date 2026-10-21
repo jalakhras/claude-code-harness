@@ -279,6 +279,33 @@ if (Test-Path $McpManifest) {
   }
 }
 
+# --- 2g. External skills: fetch pinned third-party skills (NOT vendored) -----
+# Some skills can't be committed here (no licence / third-party content). We fetch
+# them, pinned to a SHA, into ~/.claude/skills so a session can use them; nothing of
+# them enters this repo. A failed fetch is non-fatal — the dependent agent falls back.
+Say "`n[ext-skill] pinned fetches" 'Cyan'
+$ExtSkills = @(
+  @{ name = 'apple-design-skill'; url = 'https://github.com/dickwu/apple-design-skill'; sha = '914b6a377c22755597e4405e54911b996de822d7' }
+)
+foreach ($e in $ExtSkills) {
+  $dst = Join-Path $ClaudeRoot "skills\$($e.name)"
+  if ($DryRun) { Say "  would fetch: $($e.name) @ $($e.sha.Substring(0,10))" 'DarkYellow'; continue }
+  if (-not (Get-Command git -ErrorAction SilentlyContinue)) { Say "  (git not found; skipped $($e.name))" 'Yellow'; continue }
+  try {
+    if (Test-Path (Join-Path $dst '.git')) {
+      if ((& git -C $dst rev-parse HEAD 2>$null) -ne $e.sha) {
+        & git -C $dst fetch -q origin $e.sha *> $null; & git -C $dst checkout -q $e.sha *> $null
+      }
+    } elseif (Test-Path $dst) {
+      Say "  (present, not a git clone; left as-is) $($e.name)" 'DarkGray'; continue
+    } else {
+      & git clone -q $e.url $dst *> $null; & git -C $dst checkout -q $e.sha *> $null
+    }
+    if ((Test-Path (Join-Path $dst 'SKILL.md'))) { Say "  fetched: $($e.name) @ $($e.sha.Substring(0,10))" 'DarkGreen' }
+    else { Say "  FETCH FAILED: $($e.name) - the dependent agent falls back to harness skills" 'Yellow' }
+  } catch { Say "  FETCH FAILED: $($e.name) ($($_.Exception.Message)) - agent falls back" 'Yellow' }
+}
+
 # --- 3. Manifest (for doctor / uninstall) -----------------------------------
 Say "`n[3/4] manifest" 'Cyan'
 $manifestObj = [ordered]@{

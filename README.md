@@ -4,7 +4,7 @@
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude_Code-harness-d97757?style=flat-square">
   <img alt="rules" src="https://img.shields.io/badge/rules-15_+_4_stacks-0969da?style=flat-square">
   <img alt="skills" src="https://img.shields.io/badge/skills-13-6f42c1?style=flat-square">
-  <img alt="agents" src="https://img.shields.io/badge/agents-7-1f6feb?style=flat-square">
+  <img alt="agents" src="https://img.shields.io/badge/agents-14-1f6feb?style=flat-square">
   <img alt="hooks" src="https://img.shields.io/badge/hooks-13-cf222e?style=flat-square">
   <img alt="MCP" src="https://img.shields.io/badge/MCP-1-2da44e?style=flat-square">
   <img alt="PowerShell" src="https://img.shields.io/badge/Windows_PowerShell-5.1-012456?style=flat-square">
@@ -75,7 +75,7 @@ takes the structure and keeps the footprint small.
 | **Rules** (`rules/*.md`) | Always-loaded standards — guardrails (AI failure modes), workflow, testing, review, style, git, security, performance, design, UI, memory, roles. Wired into `~/.claude/CLAUDE.md` via `@import` so they load every session. |
 | **Stacks** (`rules/stacks/*`) | Per-language conventions and traps, imported only inside a project that uses that stack — so context stays lean. |
 | **Hooks** (`hooks/*`) | Event guards. Blocking hooks stop costly mistakes (bad commits, destructive commands); warning hooks nudge. Each is tested to prove it actually blocks. |
-| **Agents** (`agents/*`) | Review and planning specialists invoked by name. |
+| **Agents** (`agents/*`) | Review and planning specialists invoked by name — build/review reviewers (C#, TypeScript, database + data architecture, security), a test-first guide, a planner that writes a placement plan; and **generic read-only architecture & judgement agents** (modules, API, frontend, design conformance, performance, a business analyst, a UX reviewer) that read their rules from the active project's profile, cite the reference line they break, and run in parallel. |
 | **Skills** (`skills/*`) | On-demand workflows: local test runners, media/knowledge ingestion, research, a multi-role review pass, stack onboarding, a weekly improvement review, a model-consult second opinion, an optional local text-to-speech skill, and more. |
 | **Projects** (`projects/*`) | Per-repository rules, installed into each repo's own (git-ignored) config so a project's specifics travel with it. |
 | **Scripts** | `setup.ps1` (prerequisites), `install.ps1` (generate + copy, idempotent, backs up), `install-projects.ps1`, `doctor.ps1` (drift check), `test-hooks.ps1` (prove hooks block), an audit. |

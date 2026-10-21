@@ -23,6 +23,17 @@ State what remains, and whether the API must be restarted or the migrator run.
 When asked to summarize progress, list the changes, what was tested, and on which
 screens.
 
+## The review line & phase times | سطر المراجعة وأزمنة المراحل
+
+Every batch report carries a **review line** that lists each review/agent the batch
+needed and its result: **«<agent>: plan ✓ · diff ✓»** for an architecture/judgement
+agent that reviewed the placement plan then the diff, or **«<agent>: not needed
+(why)»** for one the batch did not touch. The classic reviewers (`/code-review`,
+`/code-review-expert`, `security-reviewer`, `database-reviewer`) appear here too.
+Add a **phase-times** line giving each agent/phase its wall-time (they run in
+parallel, so the figure is overlap, not a sum). See `50-review` for which agents a
+batch needs.
+
 ## Keep the manual test list current | قائمة الاختبار اليدوي
 
 Every batch adds concrete numbered steps to the project's manual-test-scenarios
