@@ -240,7 +240,21 @@ it writes for a clean uninstall. Re-run any time — it's idempotent.
 
 **7. Keep it sharp** — end each session with a one-line lesson in a growth log; run
 the weekly review to promote what recurs — in the log and in your conversations —
-into a rule or a skill.
+into a rule or a skill. Inside Claude Code, run `/weekly-review`. To see the
+conversation digest on its own (`~` does not work in `cmd`):
+
+```powershell
+# PowerShell
+python -I "$HOME\.claude\skills\weekly-review\scripts\mine_sessions.py" extract --growth-log "<vault>\growth-log.md"
+```
+
+```bat
+:: cmd
+python -I "%USERPROFILE%\.claude\skills\weekly-review\scripts\mine_sessions.py" extract --growth-log "<vault>\growth-log.md"
+```
+
+It keeps only what you typed (tool output and harness text dropped, secrets masked).
+Add `--since YYYY-MM-DD` to choose the start, or `--out digest.md` to save it.
 
 ---
 

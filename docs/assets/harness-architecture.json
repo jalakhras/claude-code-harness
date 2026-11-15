@@ -9,21 +9,23 @@
     "views": [
       { "id": "install", "label": "Source to sessions", "focus": ["author", "repo", "install", "claudedir", "session"], "note": "Edit the repo; install.ps1 generates ~/.claude; every session loads it." },
       { "id": "tools", "label": "What a session loads", "focus": ["session", "skills", "mcp", "runners"], "note": "Rules, skills, agents and MCP servers reach the session." },
-      { "id": "guards", "label": "Guards and proof", "focus": ["session", "hooks", "runners", "worker"], "note": "Hooks fence every tool call; heavy suites split onto the lab worker." }
+      { "id": "guards", "label": "Guards and proof", "focus": ["session", "hooks", "runners", "worker"], "note": "Hooks fence every tool call; heavy suites split onto the lab worker." },
+      { "id": "learn", "label": "Learning from use", "focus": ["session", "claudedir", "vault", "review", "repo"], "note": "Weekly, your own words and the vault feed weekly-review, which proposes a rule, hook or skill back to the repo." }
     ]
   },
   "components": [
     { "id": "author", "type": "external", "label": "You", "sublabel": "edit the repo", "pos": [40, 310], "size": [130, 60] },
     { "id": "repo", "type": "backend", "label": "claude-harness repo", "sublabel": "rules · skills · agents · hooks · mcp", "tag": "source of truth", "pos": [210, 306], "size": [185, 72] },
     { "id": "install", "type": "backend", "label": "install.ps1", "sublabel": "generate + register", "pos": [473, 196], "size": [140, 60] },
-    { "id": "claudedir", "type": "cloud", "label": "~/.claude", "sublabel": "CLAUDE.md · settings.json", "pos": [453, 306], "size": [180, 72] },
+    { "id": "claudedir", "type": "cloud", "label": "~/.claude", "sublabel": "CLAUDE.md · transcripts", "pos": [453, 306], "size": [180, 72] },
     { "id": "session", "type": "frontend", "label": "Claude Code session", "sublabel": "loads rules + tools", "pos": [700, 306], "size": [170, 72] },
     { "id": "hooks", "type": "security", "label": "Guard hooks", "sublabel": "author · consent · push", "tag": "13", "pos": [695, 146], "size": [185, 68] },
     { "id": "skills", "type": "backend", "label": "Skills + Agents", "sublabel": "dev-team · tdd · reviewers", "tag": "13 + 14", "pos": [945, 196], "size": [180, 68] },
     { "id": "mcp", "type": "external", "label": "MCP servers", "sublabel": "chrome-devtools · claude-mem", "pos": [945, 306], "size": [180, 72] },
     { "id": "runners", "type": "backend", "label": "Local-tests runners", "sublabel": "pw · pytest · dotnet", "pos": [945, 424], "size": [180, 64] },
     { "id": "worker", "type": "cloud", "label": "Lab worker", "sublabel": "parallel split · evidence", "pos": [945, 544], "size": [180, 60] },
-    { "id": "vault", "type": "database", "label": "Knowledge vault", "sublabel": "memory · growth-log", "pos": [700, 452], "size": [170, 60] }
+    { "id": "vault", "type": "database", "label": "Knowledge vault", "sublabel": "memory · growth-log", "pos": [700, 452], "size": [170, 60] },
+    { "id": "review", "type": "backend", "label": "weekly-review", "sublabel": "your words · what recurs", "tag": "weekly", "pos": [453, 544], "size": [180, 60] }
   ],
   "boundaries": [
     { "kind": "region", "label": "source of truth · git", "wraps": ["repo", "install"] },
@@ -39,7 +41,10 @@
     { "id": "session-mcp", "from": "session", "to": "mcp", "label": "tools", "fromSide": "right", "toSide": "left", "labelDy": 16 },
     { "id": "session-runners", "from": "session", "to": "runners", "label": "run suites", "fromSide": "right", "toSide": "left" },
     { "id": "runners-worker", "from": "runners", "to": "worker", "label": "offload · split", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelDy": 30 },
-    { "id": "session-vault", "from": "session", "to": "vault", "label": "recall · record", "fromSide": "bottom", "toSide": "top", "labelDy": 28 }
+    { "id": "session-vault", "from": "session", "to": "vault", "label": "recall · record", "fromSide": "bottom", "toSide": "top", "labelDy": 28 },
+    { "id": "claudedir-review", "from": "claudedir", "to": "review", "label": "conversations mined", "fromSide": "bottom", "toSide": "top", "labelAt": [543, 470] },
+    { "id": "vault-review", "from": "vault", "to": "review", "label": "lessons", "fromSide": "bottom", "toSide": "right" },
+    { "id": "review-repo", "from": "review", "to": "repo", "label": "proposes rule · hook · skill", "variant": "dashed", "fromSide": "left", "toSide": "bottom" }
   ],
   "cards": [
     { "dot": "cyan", "title": "Source to sessions", "items": ["Edit the repo; install.ps1 generates ~/.claude", "doctor.ps1 verifies no drift"] },

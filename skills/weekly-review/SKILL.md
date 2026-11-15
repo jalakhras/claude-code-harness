@@ -37,6 +37,8 @@ The window starts at the latest `--- reviewed <date>` divider in the growth log
 ```
 python -I ~/.claude/skills/weekly-review/scripts/mine_sessions.py extract --growth-log <vault>\growth-log.md --out <vault>\raw\sessions\<YYYY-MM-DD>-owner-messages.md
 ```
+`~` works in bash and PowerShell, not in Windows `cmd`. When the owner runs it by
+hand from `cmd`, write the path as `"%USERPROFILE%\.claude\skills\weekly-review\scripts\mine_sessions.py"`.
 It keeps only what the owner typed (no tool output, harness reminders, subagent
 briefs, compaction summaries, claude-mem's own prompts or pasted material), masks
 secrets, and groups by project. Read the digest **yourself** — a week is typically
