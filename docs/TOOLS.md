@@ -134,7 +134,7 @@ Imported into `~/.claude/CLAUDE.md` via `@import`, so they load **every session*
 ## 📚 8 · Remember & improve (`rules/60-memory.md`)
 | Tool | Type | What it does |
 |---|---|---|
-| `weekly-review` | 🧩 skill | Reads the growth log + backlogs, finds what recurs, proposes promoting a pattern into a rule / stack layer / hook. |
+| `weekly-review` | 🧩 skill | Mines the week's conversations (owner's words only, `scripts/mine_sessions.py`), reads the growth log, the vault, claude-mem and backlogs, finds what recurs, proposes promoting a pattern into a rule / stack layer / hook / new skill. |
 | `security-lab` | 🧩 skill | Authorized offensive testing on **owned assets only** (scope-fenced, `85-security`). |
 | claude-mem | 🌐 mcp | Session memory + work-state; the durable record across sessions. |
 | `narrate` | 🧩 skill | Optional, **off** by default — enable with `install.ps1 -Skills narrate`. |

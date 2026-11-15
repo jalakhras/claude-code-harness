@@ -52,9 +52,12 @@ A fixed routine, every session:
 
 ## Continuous learning | التعلّم المستمر
 Capture is cheap (step 3 above); the intelligence is the **`/weekly-review`**
-skill, run weekly: it reads the growth log + project backlogs, finds what recurs
-across sessions/projects, and proposes promoting each pattern into a rule, a stack
-layer, or a hook — with your approval. That is how the harness improves from use.
+skill, run weekly: it mines the week's conversations (the owner's own words only,
+secrets masked, read locally), reads the growth log, both memories (vault and
+claude-mem) and the project backlogs, finds what recurs across sessions/projects,
+and proposes promoting each pattern into a rule, a stack layer, a hook, or a **new
+skill** for a job the owner keeps asking for — with your approval. That is how the
+harness improves from use.
 A pattern seen in 2+ sessions/projects, or a trap that cost real time, is a
 promotion candidate; a one-off with no cost is not.
 

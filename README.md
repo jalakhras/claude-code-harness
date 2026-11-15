@@ -118,9 +118,11 @@ intercepts at each step: rules shape it, hooks guard it, local runners keep it c
 
 <p align="center"><sub>▶ Interactive: <a href="docs/assets/harness-workflow.html"><code>docs/assets/harness-workflow.html</code></a></sub></p>
 
-Weekly, the growth log feeds the **improvement loop**: recurring lessons are
-distilled and — with your approval — promoted into a rule, so the path itself gets
-smarter over time.
+Weekly, the growth log **and the week's conversations** feed the **improvement
+loop**: your own words are mined locally (tool output and harness text dropped,
+secrets masked), recurring lessons and repeated requests are distilled and — with
+your approval — promoted into a rule, a hook, or a **new skill** for a job you keep
+asking for, so the path itself gets smarter over time.
 
 ---
 
@@ -237,7 +239,8 @@ it writes for a clean uninstall. Re-run any time — it's idempotent.
 **6. Use it** — open Claude Code. Rules load, hooks are live, skills are available.
 
 **7. Keep it sharp** — end each session with a one-line lesson in a growth log; run
-the weekly review to promote what recurs into a rule.
+the weekly review to promote what recurs — in the log and in your conversations —
+into a rule or a skill.
 
 ---
 
